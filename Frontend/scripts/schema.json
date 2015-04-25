@@ -1,0 +1,79 @@
+{
+    "User" : {
+	"type": "object",
+	"description": "Object that represents a user",
+	"properties": {
+	    "username": {"type": "string"}
+	}
+    },
+
+    "Task" : {
+	"description": "Object that represents a task that must be performed as part of a duty. Ie. a component of a duty that is assigned to one of the participants in a duty",
+	"type": "object",
+	"properties": {
+
+	    "task_id": {
+		"type": "string",
+		"description": "Identifier of the task. Absence of this field indicates a request to create a task meaning it must be assigned an id by the backend"
+	    },
+
+	    "penalty": {
+		"type": "number",
+		"description": "The penalty the person must pay if the taks is not completed"
+	    },
+
+	    "entrusted": {
+		"type": "string",
+		"description": "The person that is responsible for performing this duty. Absence of the field indicates no persion is yet assigned to the task"
+	    },
+
+	    "votes": {
+		"type": "array",
+		"description": "Users who claim the task was not completed.",
+		"items": {"type": "string"}
+	    },
+
+	    "recurrent": {
+		"type": "boolean",
+		"description": "Indicates if the task must be performed constantly."
+	    }
+	},
+
+	"required": ["penalty", "votes", "recurrent"]
+    },
+
+    "Duty" : {
+	"type": "object",
+	"description": "Object that represents a duty (encomienda).",
+	"properties": {
+
+	    "id": {
+		"type": "string",
+		"description": "Unique identifier given to the duty. The field is absent on create requests but must be defined by the backend."
+	    },
+
+	    "name": {
+		"type": "string",
+		"description": "Name of the duty."
+	    },
+
+	    "author": {
+		"type": "string",
+		"description": "The username of the user that created the duty."
+	    },
+
+	    "participants": {
+		"type": "array",
+		"description": "The users that are participating in the duty",
+		"items": {"type": "string"}
+	    },
+
+	    "tasks": {
+		"type": "array",
+		"items": {"$ref": "Duty"}
+	    }
+	},
+
+	"required": ["name","author","participants"]
+    }
+}
