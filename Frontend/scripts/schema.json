@@ -4,7 +4,8 @@
 	"description": "Object that represents a user",
 	"properties": {
 	    "username": {"type": "string"}
-	}
+	},
+	"required": ["username"]
     },
 
     "Task" : {
