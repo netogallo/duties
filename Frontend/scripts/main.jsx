@@ -85,13 +85,17 @@ $.getJSON(
 		if(this.props.task){
 
 		    return (<div className="task">
-		    <h4>{this.props.task.name}</h4>
+		    <h3>{this.props.task.name}</h3>
+			<span className="label label-success">Reports <span className="badge">{this.state.votes.length}</span></span>
+			&nbsp;
+			<span className="label label-info">{this.props.task.entrusted}</span>
+			&nbsp;
+			<span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{this.props.task.penalty}</span>
 		    <div className="description">
 		    {this.props.task.description}
 		    </div>
-		    <span className="reportCount">{"Total reports: " + this.state.votes.length}</span>
 		    <span className="report">
-		    <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}>{"Report"}</button>
+		    <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>
 		    </span>
 		    </div>);
 		}
@@ -156,7 +160,7 @@ $.getJSON(
 		    <h3>{this.props.duty.name}</h3>
 		    <div className="participants">
 		    {this.props.duty.participants.map(function(participant){
-		    return <span>{participant.username}: {self.state.credit[participant.username] ? self.state.credit[participant.username] : 0}</span>;
+		    return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{self.state.credit[participant.username] ? self.state.credit[participant.username] : 0}</span></span>);
 		    })}
 		    </div>
 		    <div className="tasks">

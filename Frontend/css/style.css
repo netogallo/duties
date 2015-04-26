@@ -2,3 +2,36 @@
 
     overflow-y: scroll;
 }
+
+.btc-curr{
+
+    background: url("/res/btc-ico-sm.png") no-repeat;
+     background-size: contain;
+}
+
+.duty > .participants{
+
+    font-size: 22px;
+}
+
+.duty > .participants > span{
+    margin-right: 5px;
+}
+
+.tasks > div{
+
+    margin-top: 10px;
+    border-top: 2px solid #2f71aa;
+}
+
+.task > .taskTitle{
+
+    font-size: 22;
+    margin-right: 5px;
+}
+
+.task > .description{
+
+    margin-top:5px;
+    margin-bottom:5px;
+}
