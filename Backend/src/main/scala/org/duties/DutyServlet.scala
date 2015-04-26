@@ -27,7 +27,7 @@ class DutyServlet extends DutiesStack {
   }
 
   //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
-  post("/duty") {
+  post("/duty?format=form") {
     implicit val formats = Serialization.formats(NoTypeHints)
     
     try {
@@ -39,4 +39,13 @@ class DutyServlet extends DutiesStack {
       case unprocessableEntity: JsonParseException => halt(422, <h1>Unprocessable entity</h1>)
     }
   }
+
+  post("/duty") {
+    implicit val formats = Serialization.formats(NoTypeHints)
+      
+    val parsedDuty = read[Duty](request.body)
+    halt(202, <h1>Created {parsedDuty.toString()}</h1>)
+  }
+
+  
 }
