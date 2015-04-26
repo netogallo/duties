@@ -81,7 +81,7 @@
 
 	    "tasks": {
 		"type": "array",
-		"items": {"$ref": "Duty"}
+		"items": {"$ref": "Task"}
 	    }
 	},
 
