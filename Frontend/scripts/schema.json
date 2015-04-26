@@ -18,6 +18,16 @@
 		"description": "Identifier of the task. Absence of this field indicates a request to create a task meaning it must be assigned an id by the backend"
 	    },
 
+	    "name": {
+		"type": "string",
+		"description": "The name of the task."
+	    },
+
+	    "description": {
+		"type": "string",
+		"description": "Description of the task."
+	    },
+
 	    "penalty": {
 		"type": "number",
 		"description": "The penalty the person must pay if the taks is not completed"
@@ -66,7 +76,7 @@
 	    "participants": {
 		"type": "array",
 		"description": "The users that are participating in the duty",
-		"items": {"type": "string"}
+		"items": {"$ref": "User"}
 	    },
 
 	    "tasks": {
