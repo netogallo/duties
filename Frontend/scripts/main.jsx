@@ -79,6 +79,13 @@ $.getJSON(
 
 		var reportCss = ["report-btn","btn","btn-default"];
 
+		var reportBtnCss = ["label"];
+
+		if(this.props.total && this.props.total / 2 <= this.state.votes.length)
+		    reportBtnCss.push("label-warning");
+		else
+		    reportBtnCss.push("label-success");
+
 		if(this.state.reported)
 		    reportCss.push("active");
 
@@ -86,7 +93,7 @@ $.getJSON(
 
 		    return (<div className="task">
 		    <h3>{this.props.task.name}</h3>
-			<span className="label label-success">Reports <span className="badge">{this.state.votes.length}</span></span>
+			<span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.state.votes.length}</span></span>
 			&nbsp;
 			<span className="label label-info">{this.props.task.entrusted}</span>
 			&nbsp;
@@ -164,7 +171,7 @@ $.getJSON(
 		    })}
 		    </div>
 		    <div className="tasks">
-		    {this.props.duty.tasks.map(function(task){return <Task onReport={self.handleTaskUpdate} task={task}/>;})}
+		    {this.props.duty.tasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
 		    </div>);
 		else
