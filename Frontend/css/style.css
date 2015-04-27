@@ -6,7 +6,7 @@
 .btc-curr{
 
     background: url("/res/btc-ico-sm.png") no-repeat;
-     background-size: contain;
+    background-size: contain;
 }
 
 .duty > .participants{
@@ -18,10 +18,35 @@
     margin-right: 5px;
 }
 
-.tasks > div{
+.task{
 
-    margin-top: 10px;
-    border-top: 2px solid #2f71aa;
+    padding-left: 0px !important;
+
+}
+
+.tasks{
+    margin-top:10px;
+}
+
+.task > .taskHead{
+
+    /* border-radius: 25px 25px 0px 0px; */
+    boder: 2px solid #2f71aa;
+    background: #2f71aa;
+    font-color: #ffffff;
+}
+
+.task > .taskHead > h3{
+
+    color: #ffffff;
+    text-align: center;
+}
+
+.task > .taskBody{
+
+    border: 2px solid #2f71aa;
+    margin-top: -10px;
+    padding: 0px 5px 5px 5px;
 }
 
 .task > .taskTitle{

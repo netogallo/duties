@@ -91,19 +91,24 @@ $.getJSON(
 
 		if(this.props.task){
 
-		    return (<div className="task">
-		    <h3>{this.props.task.name}</h3>
+		    return (
+			<div className="task col-md-4">
+			<div className="taskHead">
+			<h3>{this.props.task.name}</h3>
+			</div>
+			<div className="taskBody">
 			<span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.state.votes.length}</span></span>
 			&nbsp;
 			<span className="label label-info">{this.props.task.entrusted}</span>
 			&nbsp;
 			<span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{this.props.task.penalty}</span>
-		    <div className="description">
-		    {this.props.task.description}
-		    </div>
-		    <span className="report">
-		    <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>
-		    </span>
+			<div className="description">
+			{this.props.task.description}
+			</div>
+			<span className="report">
+			<button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>
+			</span>
+			</div>
 		    </div>);
 		}
 	    }
