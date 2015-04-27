@@ -19,12 +19,12 @@ object Mongo {
     def name: String 
     def toMongo[U: TypeTag](u: U): DBObject = {
       val clazz = u.getClass()
-      val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList    
+      val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList
        
       val elems: List[(String, AnyRef)] = members.map(m => {
-      val member = m.name.toString()
+        val member = m.name.toString()
         val field = clazz.getMethod(member) 
-                                   (member,field.invoke(u))
+        (member,field.invoke(u))
       })
 
       MongoDBObject(elems)
