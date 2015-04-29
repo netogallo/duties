@@ -263,14 +263,15 @@ $.getJSON(
 
 		var taskSave = function(taskProps){
 		    
-		    var task = {
+		    var task = TaskS.create({
 			name: taskProps.task_name,
 			entrusted: "",
 			description: taskProps.task_description,
-			penalty: taskProps.task_penalty
-		    };
+			penalty: taskProps.task_penalty,
+			votes: []
+		    });
 
-		    self.setState({tasks: hs.concat([[task],self.state.tasks])});
+		    self.props.duty.update({tasks: hs.concat([[task],self.props.duty.tasks])});
 		};
 
 		var dialog = (
