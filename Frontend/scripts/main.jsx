@@ -88,8 +88,7 @@ $.getJSON(
 
 	var DutyList = React.createClass({
 
-	    getInitialState: function(){
-		
+	    getInitialState: function(){	
 		
 
 		return {duties: this.props.duties ? this.props.duties : []};
@@ -107,7 +106,7 @@ $.getJSON(
 		});
 
 		return (<div className="dutyList list-group">
-		    {this.state.duties.map(function(d){
+		    {this.props.duties.map(function(d){
 			
 			var classes=["list-group-item"];
 			
@@ -234,6 +233,32 @@ $.getJSON(
 	    }
 	});
 
+	var DutyEdit = React.createClass({
+
+	    saveDuty: function(e){
+
+		e.preventDefault();
+		if(this.props.onSubmit){
+
+		    this.props.onSubmit.apply(this,[{
+			duty_name: $('input[name="duty-name"]').val()
+		    }]);
+		}
+	    },
+
+	    render: function(){
+		
+		return (
+		    <div className={this.props.className}>
+		    <form onSubmit={this.saveDuty}>
+		    <label htmlFor="duty-name">Name</label>
+		    <input type="text" id="duty-name" className="form-control" name="duty-name"></input>
+		    <input type="submit" value="Create Duty"></input>
+		    </form>
+		    </div>);
+	    }
+	});
+
 	var Duty = React.createClass({
 	    
 	    render: function(){
@@ -288,13 +313,13 @@ $.getJSON(
 		    return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{penalty[participant.username] ? penalty[participant.username] : 0}</span></span>);
 		    })}
 		    </div>
+		    <div className="taskOperations">
+		    {dialog}
+		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Create Task</button>
+	            </div>
 		    <div className="tasks">
 		    {this.props.duty.tasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
-	            <div className="taskOperations">
-			{dialog}
-			<button type="button" className="btn btn-primary btn-lg" data-toggle="modal" data-target="#task-edit">Create Task</button>
-	            </div>
 		    </div>);
 		else
 		    return <div className="duty"></div>;
@@ -333,6 +358,24 @@ $.getJSON(
 		this.setState({duty: duty});
 	    },
 
+	    saveDuty: function(dutySpec){
+		
+		var self = this;
+		console.log(dutySpec);
+
+		var duty = DutyS.create({
+		    name: dutySpec.duty_name,
+		    participants: [],
+		    tasks: []
+		});
+
+		duty.setUpdate(function(){
+		    self.setState({x:'y'});
+		});
+
+		this.setState({duties: hs.concat([[duty],this.state.duties])});
+	    },
+
 	    render: function(){
 
 		var self = this;
@@ -341,6 +384,10 @@ $.getJSON(
 		    <div className="duties">
 		    <div className="col-md-4">
 		    <DutyList selectDuty={this.selectDuty} duties={this.state.duties} />
+		    <Dialog id="duty-edit">
+		    <DutyEdit onSubmit={this.saveDuty} className="modal-body"/>
+		    </Dialog>
+		    <button type="button" className="btn btn-primary btn-lg" data-toggle="modal" data-target="#duty-edit">Create Duty</button>
 		    </div>
 		    <div className="col-md-8">
 		    <Duty duty={this.state.duty} />

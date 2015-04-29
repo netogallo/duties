@@ -12,6 +12,8 @@
 .duty > .participants{
 
     font-size: 22px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .duty > .participants > span{
@@ -34,6 +36,7 @@
     boder: 2px solid #2f71aa;
     background: #2f71aa;
     font-color: #ffffff;
+    min-height: 30px;
 }
 
 .task > .taskHead > h3{
