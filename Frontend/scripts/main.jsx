@@ -10,6 +10,75 @@ $.getJSON(
 	tv4.addSchema('Task',schema.Task);
 	tv4.addSchema('Duty',schema.Duty);
 
+	var prim = {type: 'prim'};
+
+	var array = {
+
+	    of: function(type){return {type: 'array', of: type};}
+	}
+
+	var Signal = function(spec){
+
+	    return {
+		
+		type: 'signal',
+
+		create: function(obj){
+
+		    var res = {
+
+			update: function(fields){
+
+			    for(field in fields){
+				
+				this.setProp(field,fields[field]);
+
+			    }
+
+			    this.updateFn ? this.updateFn() : null;
+			},
+
+			setUpdate: function(update){
+			    
+			    this.updateFn = update;
+			},
+			
+			setProp : function(prop,value){
+			
+			    var type = spec[prop];
+			    var self = this;
+
+			    if(!type)
+				throw ("The property " + prop + " is not defined in spec: " + JSON.stringyfy(spec));
+
+			    this[prop] = value;
+
+			    function setSignal(obj){
+
+				obj.setUpdate(function(){self.update.apply(self,[])});
+			    }
+
+			    if(type.type == 'signal'){
+				
+				setSignal(self[prop]);
+			    }
+
+			    else if(type.type && type.type.type == 'array' && type.type.of.type == 'signal'){
+
+				for(var i in self[prop]){
+				    console.log(type.type.of);
+				    setSignal(self[prop][i]);
+				}
+			    }
+			}
+		    };
+
+		    res.update(obj);
+		    return res;
+		}
+	    }
+	};
+
 	var validator = hs.curry(function(schema,model){
 	    if(!tv4.validate(model,schema))
 		throw tv4.error;
@@ -21,6 +90,8 @@ $.getJSON(
 
 	    getInitialState: function(){
 		
+		
+
 		return {duties: this.props.duties ? this.props.duties : []};
 	    },
 
@@ -49,30 +120,79 @@ $.getJSON(
 	    }
 	});
 
+	var TaskEdit = React.createClass({
+
+	    saveTask: function(e){
+
+		e.preventDefault();
+		if(this.props.onSubmit){
+
+		    this.props.onSubmit.apply(this,[{
+			
+			task_name: $('input[name="task-name"]').val(),
+			task_description: $('input[name="task-description"]').val(),
+			task_penalty: $('input[name="task-penalty"]').val()
+		    }]);
+		}
+	    },
+
+	    render: function(){
+		
+		return (
+		    <div className={this.props.className}>
+		    <form onSubmit={this.saveTask}>
+		    <label htmlFor="task-name">Name</label>
+		    <input type="text" id="task-name" className="form-control" name="task-name"></input>
+		    <label htmlFor="task-description">Description</label>
+		    <input type="text" id="task-description" className="form-control" name="task-description"></input>
+		    <label htmlFor="task-penalty">Penalty</label>
+		    <input type="text" id="task-penalty" className="form-control" name="task-penalty"></input>
+		    <input type="submit" className="form-control" value="Create Task"></input>
+		    </form>
+		    </div>
+		);
+	    }
+	});
+
+	var Dialog = React.createClass({
+
+	    render: function(){
+
+		return (
+		    <div id={this.props.id} className="modal fade">
+		    <div className="modal-dialog">
+		    <div className="modal-content">
+		    {this.props.children}
+		    </div>
+		    </div>
+		    </div>
+		    
+		);
+
+	    }
+
+	});
+
 	var Task = React.createClass({
+	    
+	    isReported: function(){
 
-	    getInitialState: function(){
-
-		return {reported: hs.find(function(user){return Auth.user==user},this.props.task.votes), votes: this.props.task.votes}
+		return hs.find(
+		    function(username){
+			return username == Auth.user;}
+			,this.props.task.votes);
 	    },
 
 	    handleReport: function(e){
 		
 		var votes;
 		var self = this;
-		if(this.state.reported)
-		    votes = hs.filter(function(user){return user != Auth.user},this.state.votes);
+		if(this.isReported())
+		    votes = hs.filter(function(user){return user != Auth.user},this.props.task.votes);
 		else
-		    votes = hs.concat([[Auth.user],this.state.votes]);
+		    votes = hs.concat([[Auth.user],this.props.task.votes]);
 		
-		var callback = function(){
-		    if(self.props.onReport){
-			self.props.task.votes = votes;
-			self.props.onReport(self.props.task);
-		    }
-		}
-
-		this.setState({reported: !this.state.reported, votes: votes},callback);
+		this.props.task.update({votes: votes});
 	    },
 	    
 	    render: function(){
@@ -81,12 +201,12 @@ $.getJSON(
 
 		var reportBtnCss = ["label"];
 
-		if(this.props.total && this.props.total / 2 <= this.state.votes.length)
+		if(this.props.total && this.props.total / 2 <= this.props.task.votes.length)
 		    reportBtnCss.push("label-warning");
 		else
 		    reportBtnCss.push("label-success");
 
-		if(this.state.reported)
+		if(this.isReported())
 		    reportCss.push("active");
 
 		if(this.props.task){
@@ -97,7 +217,7 @@ $.getJSON(
 			<h3>{this.props.task.name}</h3>
 			</div>
 			<div className="taskBody">
-			<span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.state.votes.length}</span></span>
+			<span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.votes.length}</span></span>
 			&nbsp;
 			<span className="label label-info">{this.props.task.entrusted}</span>
 			&nbsp;
@@ -115,25 +235,21 @@ $.getJSON(
 	});
 
 	var Duty = React.createClass({
+	    
+	    render: function(){
+		var self = this;
 
-	    computeVotes: function(){
 		var votes = {};
+		var penalty = {};
+
 		hs.map(
 		    function(task){
 			votes[task.task_id] = task.votes;
 		    },
-		    this.props.duty.tasks);
-
-		return votes;
-	    },
-
-	    computeCredit: function(votes){
-		var self = this;
-		var penalty = {};
+		    this.props.duty ? this.props.duty.tasks : []);
 
 		hs.map(
-		    function(user){
-
+		    function(user){			
 			var loss = hs.fold(function(s,task){
 			    if(task.entrusted == user.username && self.props.duty.participants.length / 2 <= votes[task.task_id].length)
 				return s - task.penalty;
@@ -142,29 +258,25 @@ $.getJSON(
 			},0,self.props.duty.tasks);
 			penalty[user.username] = loss;
 		    },
-		    this.props.duty.participants);
-		return penalty;
-	    },
-	    
-	    getInitialState: function(){
-		if(this.props.duty){
-		    var votes = computeVotes();
-		    var credit = this.computeCredit(votes);
-		    return {votes: votes, credit: credit};
-		}else
-		    return {votes: {}, credit: {}};
-	    },
+		    this.props.duty ? this.props.duty.participants : []);
 
-	    handleTaskUpdate: function(task){
-		var votes = this.state.votes;
-		votes[task.task_id] = task.votes;
-		var credit = this.computeCredit(votes);
-		this.setState({votes: votes, credit: credit});
-		
-	    },
 
-	    render: function(){
-		var self = this;
+		var taskSave = function(taskProps){
+		    
+		    var task = {
+			name: taskProps.task_name,
+			entrusted: "",
+			description: taskProps.task_description,
+			penalty: taskProps.task_penalty
+		    };
+
+		    self.setState({tasks: hs.concat([[task],self.state.tasks])});
+		};
+
+		var dialog = (
+		    <Dialog id="task-edit">
+		    <TaskEdit onSubmit={taskSave} className="modal-body"/>
+		    </Dialog>);
 
 		if(this.props.duty)
 		    return (
@@ -172,12 +284,16 @@ $.getJSON(
 		    <h3>{this.props.duty.name}</h3>
 		    <div className="participants">
 		    {this.props.duty.participants.map(function(participant){
-		    return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{self.state.credit[participant.username] ? self.state.credit[participant.username] : 0}</span></span>);
+		    return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{penalty[participant.username] ? penalty[participant.username] : 0}</span></span>);
 		    })}
 		    </div>
 		    <div className="tasks">
 		    {this.props.duty.tasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
+	            <div className="taskOperations">
+			{dialog}
+			<button type="button" className="btn btn-primary btn-lg" data-toggle="modal" data-target="#task-edit">Create Task</button>
+	            </div>
 		    </div>);
 		else
 		    return <div className="duty"></div>;
@@ -187,30 +303,46 @@ $.getJSON(
 
 	var Duties = React.createClass({
 
-	    getInitialState: function(){
-		return {duties: this.props.duties ? this.props.duties : [], duty: undefined};
+	    updateDuties: function(duid,dutyUp){
+
+		for(var prop in dutyUp){
+		    this.state.duties[duid][prop] = dutyUp[prop];
+		}
+
+		this.setState({duties: this.state.duties});
 	    },
 
-	    addDuties: function(duties){
+	    getInitialState: function(){
+		var self = this;
+		var dutyList = this.props.duties ? this.props.duties : [];
+
+		for(var duty in dutyList){
+
+		    dutyList[duty].setUpdate(
+			function(){
+			    console.log('setting state');
+			    self.setState({x: 'y'});
+			});
+		}
 		
-		this.setState({duties: hs.concat([[duties],this.state.duties])});
+		return {duties: dutyList, duty: undefined};
+	    },
+
+	    selectDuty: function(duty){
+		this.setState({duty: duty});
 	    },
 
 	    render: function(){
 
 		var self = this;
 
-		var select = function(duty){
-		    self.setState({duty: duty});
-		};
-
 		return (
 		    <div className="duties">
 		    <div className="col-md-4">
-		    <DutyList selectDuty={select} duties={this.state.duties} />
+		    <DutyList selectDuty={this.selectDuty} duties={this.state.duties} />
 		    </div>
 		    <div className="col-md-8">
-		    <Duty duty={this.state.duty}/>
+		    <Duty duty={this.state.duty} />
 		    </div>
 		    </div>
 		);
@@ -234,13 +366,26 @@ $.getJSON(
 	}
 	*/
 	
+    var TaskS = Signal({
+	name: {type: prim},
+	entrusted: {type: prim},
+	description: {type: prim},
+	penalty: {type: prim},
+	votes: {type: prim}
+    });
+
+    var DutyS = Signal({
+	name: {type: prim},
+	participants: {type: prim},
+	tasks: {type: array.of(TaskS)}
+    });
 	
 
-	var tasks = [{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, votes: []}];
-	var users = hs.map(validator(schema.User),[{username: "user1"},{username: "user2"}]);
-	var duties = [{name: "duty1", participants: users, tasks: tasks},{name: "duty2", participants: users, tasks:[]}];
+    var tasks = hs.map(TaskS.create,[{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, votes: []}]);
+    var users = hs.map(validator(schema.User),[{username: "user1"},{username: "user2"}]);
+    var duties = hs.map(DutyS.create,[{name: "duty1", participants: users, tasks: tasks},{name: "duty2", participants: users, tasks:[]}]);
 		    
-	React.render(<Duties duties={duties}/>,
-	    document.getElementById('main')
-	);
-    });
+    React.render(<Duties duties={duties}/>,
+	document.getElementById('main')
+    );
+});
