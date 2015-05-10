@@ -3,7 +3,11 @@
 	"type": "object",
 	"description": "Object that represents a user",
 	"properties": {
-	    "username": {"type": "string"}
+	    "username": {"type": "string"},
+        "id" : {
+            "type": "string", 
+            "description": "Unique hash identifier for the duty. The field is absent on post requests and is defined by the backend."
+        }
 	},
 	"required": ["username"]
     },
@@ -57,12 +61,6 @@
 	"type": "object",
 	"description": "Object that represents a duty (encomienda).",
 	"properties": {
-
-	    "id": {
-		"type": "string",
-		"description": "Unique identifier given to the duty. The field is absent on create requests but must be defined by the backend."
-	    },
-
 	    "name": {
 		"type": "string",
 		"description": "Name of the duty."
@@ -82,6 +80,10 @@
 	    "tasks": {
 		"type": "array",
 		"items": {"$ref": "Task"}
+	    },
+        "id": {
+		"type": "string",
+		"description": "Unique hash identifier for the duty. The field is absent on post requests and is defined by the backend."
 	    }
 	},
 
