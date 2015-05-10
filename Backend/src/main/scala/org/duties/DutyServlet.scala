@@ -14,22 +14,32 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import Mongo.Collections
 import Mongo.Collections._
 
+import scala.collection.JavaConversions._
+import com.mongodb.DBObject
+
 class DutyServlet extends DutyStack {
   implicit val formats = Serialization.formats(NoTypeHints)
 
   get("/") {
     implicit val formats = Serialization.formats(NoTypeHints)
-    val duty = Duty("1", "kmels", Array("netogallo", "kmels"), Array())
+    val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
     val user = User("kmels")
+
+    val users: Seq[User] = db.getCollection(Users.name).find().toArray().map(Users.fromMongo)
+    val duties: Seq[Duty] = db.getCollection(Duties.name).find().toArray().map(Duties.fromMongo)    
 
     //val duties = 
     <html>
       <body>
+        {duties.map(d => write(d))}
+
         <h1>Post duty!</h1>
         <form method="POST" action="/duty/form">
           <textarea name='json' rows='4' cols='35'>{write(duty)}</textarea>
           <input type='submit' value='Create duty'/>
         </form>
+
+        {users.map(u => write(u))}
 
         <h1>Post user!</h1>
         <form method="POST" action="/user/form">
@@ -47,11 +57,12 @@ class DutyServlet extends DutyStack {
   }
 
     //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
-  def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]) = try {
+  def mk[U](json: String, cols: Collections)(implicit formats: Formats, mf: Manifest[U]) = try {
     val u = read[U](json)
 
     db.getCollection(cols.name).insert(cols.toMongo(u))
-    halt(202, <h1>Created {u.toString()}</h1>)
+    //halt(202, <h1>Created {u.toString()}</h1>)
+    redirect("/")
   } catch unprocessable
 
   post("/duty/form") { 
@@ -70,5 +81,9 @@ class DutyServlet extends DutyStack {
   
   post("/user") { 
     mk[User](request.body, Users) 
+  }
+
+  get("/users") {
+    
   }
 }
