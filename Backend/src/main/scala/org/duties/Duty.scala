@@ -15,8 +15,7 @@ case class Duty(author: String, participants: Seq[String], tasks: Seq[Task], id:
 case class User(username: String, id: String = (new ObjectId().toString()))
 
 object Mongo {
-  trait Collections {
-    type T
+  trait Collections[T] {
     def name: String 
 
     def toMongo[U : TypeTag](u: U): DBObject = {
@@ -33,6 +32,7 @@ object Mongo {
 
       MongoDBObject(elems)
     }
+
     def fromMongo(o: DBObject): T
     /*def fromMongo[U: ClassTag](o: DBObject): U = { 
       val clazz = classTag[U].runtimeClass
@@ -58,28 +58,24 @@ object Mongo {
   }
   
   object Collections {
-    object Tasks extends Collections {
-      type T = Task
+    object Tasks extends Collections[Task] {
+//      type T = Task
       override def name = "tasks"
-      override def fromMongo(o: DBObject): T = {
+      override def fromMongo(o: DBObject): Task = {
         new Task
       }
     }
 
-    object Duties extends Collections { 
-      type T = Duty
+    object Duties extends Collections[Duty] { 
+//      type T = Duty
       override def name = "duties" 
-      override def fromMongo(o: com.mongodb.casbah.Imports.DBObject): T = { 
-        println("Object: " + o.toString);
+      override def fromMongo(o: com.mongodb.casbah.Imports.DBObject): Duty = { 
         val ps: Seq[String] = o.as[BasicDBList]("participants").map(_.toString)
 
         val ts: Seq[Task] = o.as[BasicDBList]("tasks").map{ o => 
           new Task
           //Tasks.fromMongo(o)
         }
-
-        println(ps.mkString(","))
-        println(ps.mkString(","))
 
         Duty(
           author = o.as[String]("author"),
@@ -90,12 +86,12 @@ object Mongo {
       }
     }
 
-    implicit object Users extends Collections { 
-      type T = User
+    implicit object Users extends Collections[User] { 
+//      type T = User
       override def name = "users"
 //      override def name = "users" 
       //override def fromMongo[T](o: DBObject): T = fromMongo
-      override def fromMongo(m: DBObject): T = User(
+      override def fromMongo(m: DBObject) = User(
         username = m.as[String]("username"),
         id = m.as[String]("_id")
       )

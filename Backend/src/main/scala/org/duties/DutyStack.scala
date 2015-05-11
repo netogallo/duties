@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest
 import collection.mutable
 
 trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
-
+  
   /* wire up the precompiled templates */
   override protected def defaultTemplatePath: List[String] = List("/WEB-INF/templates/views")
   override protected def createTemplateEngine(config: ConfigT) = {
