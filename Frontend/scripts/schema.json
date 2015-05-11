@@ -54,7 +54,7 @@
 	    }
 	},
 
-	"required": ["penalty", "votes", "recurrent"]
+	"required": ["name", "penalty", "recurrent"]
     },
 
     "Duty" : {
