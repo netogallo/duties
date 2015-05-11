@@ -8,11 +8,7 @@ import scala.reflect.runtime.universe._
 import scala.reflect._
 import java.lang.reflect.Constructor
 
-class Task
-
-case class Duty(author: String, participants: Seq[String], tasks: Seq[Task], id: String = (new ObjectId().toString()))
-
-case class User(username: String, id: String = (new ObjectId().toString()))
+import Models._
 
 object Mongo {
   trait Collections[T] {
@@ -24,9 +20,11 @@ object Mongo {
        
       val elems: List[(String, AnyRef)] = members.map(m => {
         val member = m.name.toString()
-        val property = if (member == "id") "_id" else member
+        val property = if (member == "id" || member == "task_id") "_id" else member
 
+        println("MEMBER: "+member)        
         val field = clazz.getMethod(member) 
+        println("FIELD: "+field)        
         (property,field.invoke(u))
       })
 
@@ -59,10 +57,25 @@ object Mongo {
   
   object Collections {
     object Tasks extends Collections[Task] {
-//      type T = Task
       override def name = "tasks"
       override def fromMongo(o: DBObject): Task = {
-        new Task
+        val n = o.as[String]("name")
+        val d = Option(o.as[String]("description"))
+        val p = o.as[Double]("penalty")
+        val e = Option(o.as[User]("entrusted"))
+        val vs: Seq[DBObject] = o.as[BasicDBList]("votes").toSeq.map(_.asInstanceOf[DBObject])
+        val r = o.as[Boolean]("recurrent")
+        val id = o.as[String]("_id")
+
+        new Task(
+          name = n,
+          description = d,
+          penalty = p,
+          entrusted = e,
+          votes = Nil, //vs.map(o => Users.fromMongo(o)),
+          recurrent = r,
+          task_id = id
+        )
       }
     }
 
@@ -73,8 +86,11 @@ object Mongo {
         val ps: Seq[String] = o.as[BasicDBList]("participants").map(_.toString)
 
         val ts: Seq[Task] = o.as[BasicDBList]("tasks").map{ o => 
-          new Task
+          {
+            println("DBOBJECTLIST: "+ o.toString())
+            null
           //Tasks.fromMongo(o)
+          }
         }
 
         Duty(
@@ -87,14 +103,14 @@ object Mongo {
     }
 
     implicit object Users extends Collections[User] { 
-//      type T = User
       override def name = "users"
-//      override def name = "users" 
-      //override def fromMongo[T](o: DBObject): T = fromMongo
-      override def fromMongo(m: DBObject) = User(
-        username = m.as[String]("username"),
-        id = m.as[String]("_id")
-      )
+      override def fromMongo(m: DBObject) = {
+        println("GOT: "+m)
+        User(
+          username = m.as[String]("username"),
+          id = m.as[String]("_id")
+        )
+      }
     }
   }
 }
