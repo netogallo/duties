@@ -14,50 +14,54 @@ object Mongo {
   trait Collections[T] {
     def name: String 
 
-    def toMongo[U : TypeTag](u: U): DBObject = {
+    //persist any ref
+//    def mkRef[U] 
+
+    //convert toMongo any member of T that is a reference list
+    def mkRefSeq[U](n: String): Option[U => Seq[DBObject]] = None
+
+    def toMongo[U](u: U)(implicit utag: TypeTag[U]): DBObject = {
       val clazz = u.getClass()
       val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList
        
       val elems: List[(String, AnyRef)] = members.map(m => {
         val member = m.name.toString()
         val property = if (member == "id" || member == "task_id") "_id" else member
+        
+        val value = 
+          if (mkRefSeq(property).isDefined){ 
+            val objs = mkRefSeq(property).get(u)
+            println(objs)
+            //val usrprops: List[MongoDBObject] = List(("a","b"))
+            //MongoDBList(MongoDBObject(usrprops), MongoDBObject(usrprops))
+            val builder = MongoDBList.newBuilder
+            builder ++= objs
+            builder.result
+          }
+        else
+          clazz.getMethod(member).invoke(u)
 
-        println("MEMBER: "+member)        
-        val field = clazz.getMethod(member) 
-        println("FIELD: "+field)        
-        (property,field.invoke(u))
+        (property,value)
       })
 
       MongoDBObject(elems)
     }
 
     def fromMongo(o: DBObject): T
-    /*def fromMongo[U: ClassTag](o: DBObject): U = { 
-      val clazz = classTag[U].runtimeClass
-      val construct: Constructor[_] = clazz.getConstructors()(0)
-      
-      val types = construct.getGenericParameterTypes().toList
-      //val params: Array[Object] = o.keys.toArray.reverse.map(k => o(k))
-      
-      val params: List[Object] = (types,o.keys.toArray.reverse).zipped.map( { case (t,k) => {
-        println("Instanceando " + k + " como un " + t.getClass)
-        o(k)
-      }})
-
-      println("Clazz: " + clazz.toString())
-      println("Constructs: " + clazz.getConstructors().mkString(","))
-      println("Construct: " + construct.toString)
-      println("Types: " + types.mkString(","))
-      println("Params: " + params.mkString(",") + "\n\n"
-
-            )
-      construct.newInstance(params : _*).asInstanceOf[U]
-    }*/
   }
   
   object Collections {
     object Tasks extends Collections[Task] {
       override def name = "tasks"
+      override def mkRefSeq[U](n: String): Option[U => Seq[DBObject]] = n match{
+        case "votes" => Some((t:U) => {
+          val task = t.asInstanceOf[Task]                    
+          val mapped = task.votes.map(v => Users.toMongo(v))
+          mapped
+        })
+        case _ => None
+      }
+        
       override def fromMongo(o: DBObject): Task = {
         val n = o.as[String]("name")
         val d = Option(o.as[String]("description"))
@@ -72,7 +76,7 @@ object Mongo {
           description = d,
           penalty = p,
           entrusted = e,
-          votes = Nil, //vs.map(o => Users.fromMongo(o)),
+          votes = vs.map(o => Users.fromMongo(o)),
           recurrent = r,
           task_id = id
         )
