@@ -42,16 +42,36 @@
 		"description": "The person that is responsible for performing this duty. Absence of the field indicates no persion is yet assigned to the task"
 	    },
 
-	    "votes": {
+	    "reports": {
 		"type": "array",
 		"description": "Users who claim the task was not completed.",
 		"items": {"type": "string"}
 	    },
 
-	    "recurrent": {
-		"type": "boolean",
-		"description": "Indicates if the task must be performed constantly."
-	    }
+	    "duration": {
+		"type": "number",
+		"description": "Hours to complete the task"
+	    },
+
+	    "state": {
+		"type": "object",
+		"properties": {
+		    "status": {
+			"type": "string",
+			"oneOf": [
+			    "free",
+			    "entrusted",
+			    "expired"
+			]
+		    },
+		    "entrust_start": {
+			"type": "string",
+			"format": "date-time",
+			"description": "Datetime as 'DD/MM/YY:HH:MM'. May be absent if status is not entrusted"
+		    }
+		}
+		"required": ["status"]
+	    }	
 	},
 
 	"required": ["name", "penalty", "recurrent"]
@@ -81,7 +101,7 @@
 		"type": "array",
 		"items": {"$ref": "Task"}
 	    },
-        "id": {
+            "id": {
 		"type": "string",
 		"description": "Unique hash identifier for the duty. The field is absent on post requests and is defined by the backend."
 	    }

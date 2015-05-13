@@ -4,8 +4,6 @@ requirejs(["server"],function(server){
 	"scripts/schema.json",
 	function(schema){
 
-	    var Auth = {user: "user1"}
-	    
 	    var hs = prelude('prelude-ls');
 
 	    tv4.addSchema('User',schema.User);
@@ -180,7 +178,7 @@ requirejs(["server"],function(server){
 
 		    return hs.find(
 			function(username){
-			    return username == Auth.user;}
+			    return username == server.getLoggedUser().username;}
 			    ,this.props.task.votes);
 		},
 
@@ -188,10 +186,11 @@ requirejs(["server"],function(server){
 		    
 		    var votes;
 		    var self = this;
+		    var logged = server.getLoggedUser();
 		    if(this.isReported())
-			votes = hs.filter(function(user){return user != Auth.user},this.props.task.votes);
+			votes = hs.filter(function(user){return user != logged.username},this.props.task.votes);
 		    else
-			votes = hs.concat([[Auth.user],this.props.task.votes]);
+			votes = hs.concat([[logged.username],this.props.task.votes]);
 		    
 		    this.props.task.update({votes: votes});
 		},
@@ -363,19 +362,25 @@ requirejs(["server"],function(server){
 		saveDuty: function(dutySpec){
 		    
 		    var self = this;
-		    console.log(dutySpec);
-
-		    var duty = DutyS.create({
+		    var duty = {
 			name: dutySpec.duty_name,
 			participants: [],
 			tasks: []
-		    });
+		    };
 
-		    duty.setUpdate(function(){
-			self.setState({x:'y'});
-		    });
+		    server.saveDuty(duty,function(result){
 
-		    this.setState({duties: hs.concat([[duty],this.state.duties])});
+			if(!result.error){
+
+			    var dutyS = DutyS.create(duty);
+
+			    dutyS.setUpdate(function(){
+				self.setState({x:'y'});
+			    });
+
+			    self.setState({duties: hs.concat([[dutyS],self.state.duties])});
+			}
+		    });
 		},
 
 		render: function(){
