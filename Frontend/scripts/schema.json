@@ -69,7 +69,7 @@
 			"format": "date-time",
 			"description": "Datetime as 'DD/MM/YY:HH:MM'. May be absent if status is not entrusted"
 		    }
-		}
+		},
 		"required": ["status"]
 	    }	
 	},

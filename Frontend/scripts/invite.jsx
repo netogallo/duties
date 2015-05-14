@@ -1,0 +1,5 @@
+requirejs(["server"],function(server){
+	
+	
+	
+})

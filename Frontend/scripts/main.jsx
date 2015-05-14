@@ -1,8 +1,10 @@
-requirejs(["server"],function(server){
-    console.log(server.host);
+requirejs(["server","signal"],function(server,signal){
+    console.log(signal);
     $.getJSON(
-	"scripts/schema.json",
+	"/scripts/schema.json?v=x",
 	function(schema){
+	    
+	    console.log("what");
 
 	    var hs = prelude('prelude-ls');
 
@@ -10,74 +12,7 @@ requirejs(["server"],function(server){
 	    tv4.addSchema('Task',schema.Task);
 	    tv4.addSchema('Duty',schema.Duty);
 
-	    var prim = {type: 'prim'};
-
-	    var array = {
-
-		of: function(type){return {type: 'array', of: type};}
-	    }
-
-	    var Signal = function(spec){
-
-		return {
-		    
-		    type: 'signal',
-
-		    create: function(obj){
-
-			var res = {
-
-			    update: function(fields){
-
-				for(field in fields){
-				    
-				    this.setProp(field,fields[field]);
-
-				}
-
-				this.updateFn ? this.updateFn() : null;
-			    },
-
-			    setUpdate: function(update){
-				
-				this.updateFn = update;
-			    },
-			    
-			    setProp : function(prop,value){
-				
-				var type = spec[prop];
-				var self = this;
-
-				if(!type)
-				    throw ("The property " + prop + " is not defined in spec: " + JSON.stringyfy(spec));
-
-				this[prop] = value;
-
-				function setSignal(obj){
-
-				    obj.setUpdate(function(){self.update.apply(self,[])});
-				}
-
-				if(type.type == 'signal'){
-				    
-				    setSignal(self[prop]);
-				}
-
-				else if(type.type && type.type.type == 'array' && type.type.of.type == 'signal'){
-
-				    for(var i in self[prop]){
-					console.log(type.type.of);
-					setSignal(self[prop][i]);
-				    }
-				}
-			    }
-			};
-
-			res.update(obj);
-			return res;
-		    }
-		}
-	    };
+	    var Signal = signal.Signal;
 
 	    var validator = hs.curry(function(schema,model){
 		if(!tv4.validate(model,schema))
@@ -420,19 +355,21 @@ requirejs(["server"],function(server){
 	      </div>;
 	      }
 	    */
+
+	    var Types = signal.Types;
 	    
 	    var TaskS = Signal({
-		name: {type: prim},
-		entrusted: {type: prim},
-		description: {type: prim},
-		penalty: {type: prim},
-		votes: {type: prim}
+		name: {type: Types.prim},
+		entrusted: {type: Types.prim},
+		description: {type: Types.prim},
+		penalty: {type: Types.prim},
+		votes: {type: Types.prim}
 	    });
 
 	    var DutyS = Signal({
-		name: {type: prim},
-		participants: {type: prim},
-		tasks: {type: array.of(TaskS)}
+		name: {type: Types.prim},
+		participants: {type: Types.prim},
+		tasks: {type: Types.array.of(TaskS)}
 	    });
 	    
 
@@ -440,8 +377,10 @@ requirejs(["server"],function(server){
 	    var users = hs.map(validator(schema.User),[{username: "user1"},{username: "user2"}]);
 	    var duties = hs.map(DutyS.create,[{name: "duty1", participants: users, tasks: tasks},{name: "duty2", participants: users, tasks:[]}]);
 	    
+	    console.log("Render");
+
 	    React.render(<Duties duties={duties}/>,
 		document.getElementById('main')
 	    );
-	});
+	}).fail(function(r,e){console.log(e);});
 });
