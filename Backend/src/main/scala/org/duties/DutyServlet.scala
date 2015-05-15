@@ -12,12 +12,17 @@ import Mongo.Collections._
 
 import com.mongodb.DBObject
 
+//hasher
+import com.roundeights.hasher.Implicits._
+import scala.language.postfixOps
+
 class DutyServlet extends DutyStack {   
   get("/") {
     val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
-    val user = User("kmels")
+    val user = User("kmels", "pw")
+    val hashedPw = "pw".sha256
     val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
-                  description = Some("Optional description"), entrusted = Option(User("Optional entrusted/asignee")), votes = Seq(User("An optional user's vote")))
+                  description = Some("Optional description"), entrusted = Option(User("Optional entrusted/asignee", hashedPw)), votes = Seq(User("An optional user's vote", hashedPw)))
 
     //val duties = 
     <html>
@@ -78,6 +83,15 @@ class DutyServlet extends DutyStack {
     mk[Task](request.body, Tasks)
   }  
   
+  post("/auth"){
+    //mk[Auth](request.body, Auths)
+  }
+
+  post("/invite"){
+    //requireAuth()
+    //mk[Invite](request.body, Invites)
+  }
+
   // list
   get("/duties") {
     find(Duties)
@@ -90,4 +104,9 @@ class DutyServlet extends DutyStack {
   get("/tasks") {
     find(Tasks)
   }
+
+  get("/invites") {
+    //find(Invites(user))
+  }
+  
 }

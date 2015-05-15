@@ -22,6 +22,7 @@ object DutiesBuild extends Build {
       scalaVersion := ScalaVersion,
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
+      resolvers += "RoundEights" at "http://maven.spikemark.net/roundeights",
       libraryDependencies ++= Seq(
         "org.scalatra" %% "scalatra" % ScalatraVersion,
         "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
@@ -31,7 +32,8 @@ object DutiesBuild extends Build {
         "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
         "javax.servlet" % "javax.servlet-api" % "3.1.0",
         "org.json4s" %% "json4s-jackson" % "3.2.11",
-        "org.mongodb" %% "casbah" % "2.8.1"
+        "org.mongodb" %% "casbah" % "2.8.1",
+        "com.roundeights" %% "hasher" % "1.0.0"
       ),
       scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
         Seq(

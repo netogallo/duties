@@ -7,5 +7,11 @@ object Models {
 
   case class Duty(author: String, participants: Seq[String], tasks: Seq[Task], id: String = (new ObjectId().toString()))
   
-  case class User(username: String, id: String = (new ObjectId().toString()))
+  case class User(username: String, password: String, id: String = (new ObjectId().toString()))
+}
+
+
+object UtilObjects  {
+  import java.util.Date
+  case class Auth(username: String, password: String, date: Date)
 }

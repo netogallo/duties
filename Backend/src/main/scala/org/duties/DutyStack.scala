@@ -23,10 +23,7 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   
   //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
   def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]) = try {
-    val u = read[U](json)
-    
-    println("READ : " + u)
-
+    val u = read[U](json)    
     db.getCollection(cols.name).insert(cols.toMongo(u))
     //halt(202, <h1>Created {u.toString()}</h1>)
     redirect("/")
