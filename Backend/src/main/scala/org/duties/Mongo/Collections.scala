@@ -107,11 +107,20 @@ object Mongo {
     }
 
     implicit object Users extends Collections[User] { 
+      import com.roundeights.hasher.Implicits._
+      import scala.language.postfixOps
       override def name = "users"
+      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): DBObject = {
+        val unencrypted = super.toMongo(u)
+        unencrypted.update("password", u.asInstanceOf[User].password.sha256.hex)
+        unencrypted 
+      }
+
       override def fromMongo(m: DBObject) = {
         println("GOT: "+m)
         User(
           username = m.as[String]("username"),
+          password = m.as[String]("password"),
           id = m.as[String]("_id")
         )
       }
