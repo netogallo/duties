@@ -12,8 +12,6 @@ requirejs(["server","signal"],function(server,signal){
 	    tv4.addSchema('Task',schema.Task);
 	    tv4.addSchema('Duty',schema.Duty);
 
-	    var Signal = signal.Signal;
-
 	    var validator = hs.curry(function(schema,model){
 		if(!tv4.validate(model,schema))
 		    throw tv4.error;
@@ -152,11 +150,13 @@ requirejs(["server","signal"],function(server,signal){
 			    <h3>{this.props.task.name}</h3>
 			    </div>
 			    <div className="taskBody">
+			    <div className="taskStatus">
 			    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.votes.length}</span></span>
 			    &nbsp;
 			    <span className="label label-info">{this.props.task.entrusted}</span>
 			    &nbsp;
 			    <span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{this.props.task.penalty}</span>
+			    </div>
 			    <div className="description">
 			    {this.props.task.description}
 			    </div>
@@ -354,24 +354,7 @@ requirejs(["server","signal"],function(server,signal){
 	      </div>
 	      </div>;
 	      }
-	    */
-
-	    var Types = signal.Types;
-	    
-	    var TaskS = Signal({
-		name: {type: Types.prim},
-		entrusted: {type: Types.prim},
-		description: {type: Types.prim},
-		penalty: {type: Types.prim},
-		votes: {type: Types.prim}
-	    });
-
-	    var DutyS = Signal({
-		name: {type: Types.prim},
-		participants: {type: Types.prim},
-		tasks: {type: Types.array.of(TaskS)}
-	    });
-	    
+	    */	    
 
 	    var tasks = hs.map(TaskS.create,[{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, votes: []}]);
 	    var users = hs.map(validator(schema.User),[{username: "user1"},{username: "user2"}]);
