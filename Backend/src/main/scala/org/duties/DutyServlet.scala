@@ -10,56 +10,20 @@ import Models._
 import Mongo.Collections
 import Mongo.Collections._
 
+import Auth._
 import com.mongodb.DBObject
 
-//hasher
-import com.roundeights.hasher.Implicits._
-import scala.language.postfixOps
-
-class DutyServlet extends DutyStack {   
-  get("/") {
-    val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
-    val user = User("kmels", "pw")
-    val hashedPw = "pw".sha256
-    val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
-                  description = Some("Optional description"), entrusted = Option(User("Optional entrusted/asignee", hashedPw)), votes = Seq(User("An optional user's vote", hashedPw)))
-
-    //val duties = 
-    <html>
-      <body>
-        <h1>GET /duties</h1>
-        {find(Duties)}
-
-        <h1>POST /duty</h1>
-        <form method="POST" action="/duty/form">
-          <textarea name='json' rows='4' cols='45'>{write(duty)}</textarea>
-          <input type='submit' value='Create duty'/>
-        </form>
-
-        <h1>GET /users</h1>
-        {find(Users)}
-
-        <h1>Post /user</h1>
-        <form method="POST" action="/user/form">
-          <textarea name='json' rows='4' cols='45'>{write(user)}</textarea>
-          <input type='submit' value='Create user'/>
-        </form>
-
-        <h1>GET /tasks</h1>
-        {find(Tasks)}
-
-        <h1>Post /task</h1>
-        <form method="POST" action="/task/form">
-          <textarea name='json' rows='9' cols='45'>{write(task)}</textarea>
-          <input type='submit' value='Create task'/>
-        </form>
-      </body>
-    </html>
-  }
-    
+class DutyServlet extends DutyStack with Homepage with Captchas {
+  get("/") { home }
+  
   // create by forms
-  post("/duty/form") { 
-    mk[Duty](params("json"), Duties)
+  post("/duty/form") {
+    val in = params("json")
+    val username = requireAuth
+    val duty = read[Duty](in)
+    val isAuthor = username.equals(duty.author)
+    if (isAuthor) mk[Duty](duty, Duties)
+    else mkError("Author must be logged")
   }
 
   post("/user/form") {
@@ -68,6 +32,13 @@ class DutyServlet extends DutyStack {
 
   post("/task/form") {
     mk[Task](params("json"), Tasks)
+  }
+  
+  post("/auth/form") {
+    val json_code: String = mkAuth(params("json"))
+    val auth: AuthCode = read[AuthCode](json_code)
+    cookies.set("rm",auth.code)
+    redirect("/")
   }
 
   // create
@@ -84,7 +55,12 @@ class DutyServlet extends DutyStack {
   }  
   
   post("/auth"){
-    //mk[Auth](request.body, Auths)
+    mkAuth(request.body)
+  }
+  
+  post("/log-out"){
+    cookies.delete(Auth.COOKIE)
+    redirect("/")
   }
 
   post("/invite"){

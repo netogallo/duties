@@ -106,7 +106,7 @@ object Mongo {
       }
     }
 
-    implicit object Users extends Collections[User] { 
+    implicit object Users extends Collections[User] with MongoClient { 
       import com.roundeights.hasher.Implicits._
       import scala.language.postfixOps
       override def name = "users"
@@ -117,12 +117,17 @@ object Mongo {
       }
 
       override def fromMongo(m: DBObject) = {
-        println("GOT: "+m)
         User(
           username = m.as[String]("username"),
-          password = m.as[String]("password"),
+          password = "<hidden>",
           id = m.as[String]("_id")
         )
+      }
+
+      def findUsername(ident: String): Option[User] = {
+        val q = MongoDBObject("username" -> ident)
+        val u = db.getCollection(name).findOne(q)
+        Option(fromMongo(u))
       }
     }
   }
