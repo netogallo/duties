@@ -67,20 +67,19 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
     mk(read[U](json), cols)  
   } catch renderUnprocessable
   
-  def mkAuth(json: String): String = try {
+  def mkAuth(json: String): Option[String] = {
     contentType = "application/json"
-    val a: Auth = read[Auth](json)
-    val pw = a.password.sha256.hex
-    val u = MongoDBObject("username" -> a.username, "password" -> pw)
-    val auth: DBObject = db.getCollection(Users.name).findOne(u)
+    val aReq: Auth = read[Auth](json)
+    val hashedPw = aReq.password.sha256.hex
+    val uQuery = MongoDBObject("username" -> aReq.username, "password" -> hashedPw)
+    val auth: DBObject = db.getCollection(Users.name).findOne(uQuery)
 
-    if (auth != null){
-      val code = Auth.encrypt(a)
+    Option(auth).map(o => {
+      val code = Auth.encrypt(aReq)
+      cookies.set("rm", code)
       write(AuthCode(code))
-    } else {
-      mkError("Not found")
-    }
-  } catch renderUnprocessable
+    })
+  }
 
   def find[U](col: Collections[U]) = {
     write(db.getCollection(col.name).find().toArray().map(col.fromMongo))

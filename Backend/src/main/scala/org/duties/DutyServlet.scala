@@ -44,11 +44,12 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     mk[Task](params("json"), Tasks)
   }
   
-  post("/auth/form") {
-    val json_code: String = mkAuth(params("json"))
-    val auth: AuthCode = read[AuthCode](json_code)
-    cookies.set("rm",auth.code)
-    redirect("/")
+  post("/login/form") { 
+    try {
+      val authCode = mkAuth(params("json"))
+      if (authCode.isDefined) redirect("/")
+      else halt(404,mkError("<p>Not found</p>"))
+    } catch renderUnprocessable
   }
   
   post("/invite/form") {
@@ -68,8 +69,12 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     mk[Task](request.body, Tasks)
   }  
   
-  post("/auth"){
-    mkAuth(request.body)
+  post("/login") {
+    try {
+      val authCode = mkAuth(request.body)
+      if (authCode.isDefined) authCode.get
+      else halt(404, "<p>Not Found</p>")
+    } catch renderUnprocessable
   }
   
   post("/log-out"){

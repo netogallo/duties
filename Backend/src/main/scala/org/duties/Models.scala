@@ -2,8 +2,19 @@ package org.duties
 
 import com.mongodb.casbah.Imports._
 
+
+import Models._
+import Mongo.Collections._
+
+import java.util.Date
+import java.util.Calendar
+import java.security.Key
+import javax.crypto.Cipher
+import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
+import javax.xml.bind.DatatypeConverter
+
 object Models {
-  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, votes: Seq[User] = Nil, recurrent: Boolean, task_id: String = (new ObjectId().toString()))
+  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reports: Seq[String] = Nil, recurrent: Boolean, task_id: String = (new ObjectId().toString()))
 
   case class Duty(author: String, participants: Seq[String], tasks: Seq[Task], id: String = (new ObjectId().toString()))
   
@@ -11,15 +22,6 @@ object Models {
 
   case class Invite(author: String, advocate: String, tasks: Seq[Task] = Seq(), duty: Option[String] = None)
 }
-
-import Models._
-import Mongo.Collections._
-import java.util.Date
-import java.util.Calendar
-import java.security.Key
-import javax.crypto.Cipher
-import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
-import javax.xml.bind.DatatypeConverter
 
 object Auth {         
   case class AuthCode(code: String)

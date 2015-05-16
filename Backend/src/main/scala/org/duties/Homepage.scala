@@ -12,7 +12,6 @@ trait Homepage {
   this: DutyStack with Captchas => 
   def home = {
     val auth = request.cookies.get(Auth.COOKIE)
-    def isLogged = auth.isDefined
     val user = User("kmels", "pw")
     val authRequest = Auth.fromUser(user)
     val captcha = mkCaptcha
@@ -20,10 +19,10 @@ trait Homepage {
     
     val hashedPw = "pw".sha256.hex
     val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
-    val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
-                  description = Some("Optional description"), entrusted = Some("An optional asignee"), votes = Seq(User("An optional user's vote", hashedPw)))
+    val task = Task(penalty = 1.5d, name = "My task", recurrent = false)
 
     def loggedUser = maybeAuth
+    def isLogged = loggedUser.isDefined
     val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
 
     val invite = loggedUser.map(author => Invite(author, "netogallo", Seq(task)))
@@ -39,8 +38,8 @@ trait Homepage {
           </form>
         }            
 
-        <h1>POST /auth :: JSON -> JSON </h1>
-        <form method="POST" action="/auth/form">
+        <h1>POST /login :: JSON -> JSON </h1>
+        <form method="POST" action="/login/form">
           <textarea name='json' rows='4' cols='45'>{write(authRequest)}</textarea>
           <input type='submit' value='Login'/>
         </form>
