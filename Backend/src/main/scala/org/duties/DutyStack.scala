@@ -29,7 +29,10 @@ import scala.language.postfixOps
 trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   implicit val formats = Serialization.formats(NoTypeHints)
   case class Error(error: String)
-  def mkError(msg: String): String = write(Error(msg))
+  def mkError(msg: String): String = {
+    contentType = "application/json"
+    write(Error(msg))
+  }
 
   //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
   def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]) = try {
@@ -39,6 +42,7 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   } catch renderUnprocessable
   
   def mkAuth(json: String): String = try {
+    contentType = "application/json"
     import UtilObjects._
     val a: Auth = read[Auth](json)
     val pw = a.password.sha256.hex
@@ -62,6 +66,10 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
     case unprocessable: JsonParseException => mkError("<h1>422: Unprocessable. </h1><p>" + unprocessable + "</p>") 
     case inexistentEntity: JsonMappingException => mkError("<h1>415: Unsupported media type. </h1> <p>Submitting a json body will succeed</p>")
     case invalid: MappingException => mkError("<h1>400 Bad Request</h1> <p>" + invalid.msg +"</p>")
+    case e: Exception => {
+      println(e)
+      mkError("Congrats. You discovered a bug.")
+    }
   }
 
   /* wire up the precompiled templates */

@@ -12,9 +12,9 @@ import Mongo.Collections._
 
 import com.mongodb.DBObject
 
-class DutyServlet extends DutyStack with Homepage {   
+class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/") { home }
-    
+  
   // create by forms
   post("/duty/form") { 
     mk[Duty](params("json"), Duties)
