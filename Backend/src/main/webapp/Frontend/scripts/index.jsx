@@ -5,10 +5,12 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 	createUser: function(e){
 
 	    e.preventDefault();
-	    $.ajax(server.api.user,{
+	    $.post(server.api.user,
+	    {json: JSON.stringify({
 		username: $('input[name="email"]').val(),
-		password: $('input[name="email"]').val()
-	    })
+		password: $('input[name="password"]').val(),
+		id: "fasd89h38h"
+	    })})
 	    .done(
 		function(data){
 		    console.log("good");

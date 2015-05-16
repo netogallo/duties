@@ -1,8 +1,8 @@
-Frontend/scripts/.module-cache/
-Frontend/scripts/main.js
+Backend/src/main/webapp/Frontend/scripts/.module-cache/
+Backend/src/main/webapp/Frontend/scripts/main.js
 node_modules/
 DB/
-Frontend/scripts/widgets.js
-Frontend/scripts/invite.js
-Frontend/scripts/ui.js
-Frontend/scripts/index.js
+Backend/src/main/webapp/Frontend/scripts/widgets.js
+Backend/src/main/webapp/Frontend/scripts/invite.js
+Backend/src/main/webapp/Frontend/scripts/ui.js
+Backend/src/main/webapp/Frontend/scripts/index.js

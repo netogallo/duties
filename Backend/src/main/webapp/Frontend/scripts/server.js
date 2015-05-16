@@ -1,5 +1,5 @@
 define(function(){
-    var hostname = "http://localhost:8080"
+    var hostname = "";//"http://localhost:8080"
 
     return {
 
