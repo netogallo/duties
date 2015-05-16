@@ -1,5 +1,4 @@
 define(["server"],function(server){
-
     var Container = React.createClass({
 
 	login: function(e){
@@ -7,10 +6,10 @@ define(["server"],function(server){
 	    e.preventDefault();
 	    $.post(
 		server.api.login,
-		{
+		JSON.stringify({
 		    username: $('input[name="email-login"]').val(),
 		    password: $('input[name="password-login"]').val()
-		})
+		}))
 	    .done(
 		function(data){
 		    console.log("good");
@@ -61,9 +60,14 @@ define(["server"],function(server){
 
     });
 
+    var LoggedMenu = [
+	{name: "Invites", href: ""}
+    ];
+
     return {
 
 	Container: Container,
+	LoggedMenu: LoggedMenu,
 	render: function(c){
 
 	    React.render(

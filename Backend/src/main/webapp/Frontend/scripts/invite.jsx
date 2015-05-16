@@ -1,4 +1,4 @@
-requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs){
+requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,ui){
 
     var InviteTask = React.createClass({
 	
@@ -86,6 +86,10 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs)
 
     var Invites = React.createClass({
 
+	loadInvites: function(){
+
+	},
+
 	getInitialState: function(){
 
 	    return {active: this.props.invites.length > 0 ? 0 : undefined}
@@ -134,8 +138,8 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs)
     var invite = {tasks: tasks, duty: {name: "Kaiser", participants: participants}};
 
     ui.render({
-	nav: [],
-	title: <h2>Duties</h2>,
-	body: <Invites invites={[invite]} />
+	nav: ui.LoggedMenu,
+	title: <h2>Invites</h2>,
+	body: <Invites />
     });
 });
