@@ -10,24 +10,28 @@ import scala.language.postfixOps
 
 trait Homepage {
   this: DutyStack with Captchas => 
-  def home = {    
-    val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
+  def home = {
+    val auth = request.cookies.get(Auth.COOKIE)
+    def isLogged = auth.isDefined
     val user = User("kmels", "pw")
-    val auth = Auth.fromUser(user)
-    val hashedPw = "pw".sha256.hex
-    val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
-                  description = Some("Optional description"), entrusted = Option(User("Optional entrusted/asignee", hashedPw)), votes = Seq(User("An optional user's vote", hashedPw)))
-    
+    val authRequest = Auth.fromUser(user)
     val captcha = mkCaptcha
-    session.put("captcha", captcha)
+    session.put("captcha", captcha)    
+    
+    val hashedPw = "pw".sha256.hex
+    val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
+    val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
+                  description = Some("Optional description"), entrusted = Some("An optional asignee"), votes = Seq(User("An optional user's vote", hashedPw)))
 
-    val auth_code = request.cookies.get(Auth.COOKIE)
+    def loggedUser = maybeAuth
+    val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
 
+    val invite = loggedUser.map(author => Invite(author, "netogallo", Seq(task)))
     <html>
       <body>
         {
-        if (auth_code.isDefined)
-          <p>Last auth: {if (auth_code.isDefined) auth_code.get else null }
+        if (auth.isDefined)
+          <p>Last auth: {if (auth.isDefined) auth.get else null }
           </p>
 
           <form method="POST" action="/log-out">
@@ -37,7 +41,7 @@ trait Homepage {
 
         <h1>POST /auth :: JSON -> JSON </h1>
         <form method="POST" action="/auth/form">
-          <textarea name='json' rows='4' cols='45'>{write(auth)}</textarea>
+          <textarea name='json' rows='4' cols='45'>{write(authRequest)}</textarea>
           <input type='submit' value='Login'/>
         </form>
               
@@ -75,6 +79,20 @@ trait Homepage {
         <form method="POST" action="/task/form">
           <textarea name='json' rows='9' cols='45'>{write(task)}</textarea>
           <input type='submit' value='Create task'/>
+        </form>
+
+        <h1>GET /invites/$user :: JSON -> JSON</h1>        
+        {if (!isLogged) 
+           <p>"Login to see invites"</p>
+         else 
+           <p>
+             {if (invites.isEmpty) "You don't have invites." else write(invites)}
+          </p>
+       }
+
+        <form method="POST" action="/invite/form">
+          <textarea name='json' rows='9' cols='45'>{write(invite)}</textarea>
+          <input type='submit' value='Send invite'/>
         </form>
       </body>
     </html>

@@ -3,13 +3,14 @@ package org.duties
 import com.mongodb.casbah.Imports._
 
 object Models {
-  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[User] = None, votes: Seq[User] = Nil, recurrent: Boolean, task_id: String = (new ObjectId().toString()))
+  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, votes: Seq[User] = Nil, recurrent: Boolean, task_id: String = (new ObjectId().toString()))
 
   case class Duty(author: String, participants: Seq[String], tasks: Seq[Task], id: String = (new ObjectId().toString()))
   
   case class User(username: String, password: String, id: String = (new ObjectId().toString()))
-}
 
+  case class Invite(author: String, advocate: String, tasks: Seq[Task] = Seq(), duty: Option[String] = None)
+}
 
 import Models._
 import Mongo.Collections._
@@ -32,7 +33,6 @@ object Auth {
     new SecretKeySpec(keyBytes, "AES")
   }
   def SEPARATOR = ":"
-
   
   // Cookie-code format.
   def debase64(string: String): Array[Byte] = DatatypeConverter.parseBase64Binary(string)

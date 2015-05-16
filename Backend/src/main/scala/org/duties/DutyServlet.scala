@@ -16,14 +16,24 @@ import com.mongodb.DBObject
 class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/") { home }
   
-  // create by forms
-  post("/duty/form") {
-    val in = params("json")
+  def mkDuty(in: String) = {
     val username = requireAuth
     val duty = read[Duty](in)
     val isAuthor = username.equals(duty.author)
     if (isAuthor) mk[Duty](duty, Duties)
     else mkError("Author must be logged")
+  }
+
+  def mkInvite(in: String) = {
+    val username = requireAuth
+    val invite = read[Invite](in)
+    val isAuthor = username.equals(invite.author)
+    if (isAuthor) mk[Invite](invite, Invites)
+    else mkError("Author must be logged")
+  }
+  // create by forms
+  post("/duty/form") {
+    mkDuty(params("json"))
   }
 
   post("/user/form") {
@@ -40,10 +50,14 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     cookies.set("rm",auth.code)
     redirect("/")
   }
+  
+  post("/invite/form") {
+    mkInvite(request.body)
+  }
 
   // create
   post("/duty") {
-    mk[Duty](request.body, Duties)
+    mkDuty(request.body)
   }
   
   post("/user") { 
@@ -64,8 +78,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
 
   post("/invite"){
-    //requireAuth()
-    //mk[Invite](request.body, Invites)
+    mkInvite(params("json"))
   }
 
   // list
