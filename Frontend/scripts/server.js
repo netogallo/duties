@@ -1,5 +1,14 @@
 define(function(){
+    var hostname = "http://localhost:8080"
+
     return {
+
+	api: {
+	    
+	    host: hostname,
+	    user: hostname + "/user"
+
+	},
 
 	getDuties: function(){
 	    

@@ -1,11 +1,24 @@
-requirejs(["ui","hs"],function(ui,hs){
+requirejs(["ui","hs","server"],function(ui,hs,server){
 
     var CreateUser = React.createClass({
 
 	createUser: function(e){
 
 	    e.preventDefault();
-	    $.ajax
+	    $.ajax(server.api.user,{
+		username: $('input[name="email"]').val(),
+		password: $('input[name="email"]').val()
+	    })
+	    .done(
+		function(data){
+		    console.log("good");
+		    console.log(data);
+		})
+	    .fail(
+		function(data){
+		    console.log("bad");
+		    console.log(data);
+		});
 	},
 
 	render: function(){
@@ -18,7 +31,31 @@ requirejs(["ui","hs"],function(ui,hs){
 		<label htmlFor="email">Password</label>
 		<input type="password" id="password" className="form-control" name="password"></input>
 		<input type="submit" value="Create User"></input>
+		</form>
 		</div>);
-		
+	}
+    });
+
+    var Homepage = React.createClass({
+	
+	render: function(){
+
+	    return(
+		<div>
+		<div className="splash col-md-8">
+		</div>
+		<div className="register col-md-4">
+		<h3>Create an Account</h3>
+		<CreateUser />
+		</div>
+		</div>
+	    );
+	}
+    });
+
+    ui.render({
+	title: "Duites!",
+	nav: [],
+	body: (<Homepage />)
     });
 });
