@@ -12,57 +12,8 @@ import Mongo.Collections._
 
 import com.mongodb.DBObject
 
-//hasher
-import com.roundeights.hasher.Implicits._
-import scala.language.postfixOps
-
-class DutyServlet extends DutyStack {   
-  get("/") {
-    val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
-    val user = User("kmels", "pw")
-    val auth = UtilObjects.Auth.fromUser(user)
-    val hashedPw = "pw".sha256.hex
-    val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
-                  description = Some("Optional description"), entrusted = Option(User("Optional entrusted/asignee", hashedPw)), votes = Seq(User("An optional user's vote", hashedPw)))
-
-    //val duties = 
-    <html>
-      <body>
-      <h1>Post /auth</h1>
-        <form method="POST" action="/auth/form">
-          <textarea name='json' rows='4' cols='45'>{write(auth)}</textarea>
-          <input type='submit' value='Post authentication'/>
-        </form>
-
-        <h1>GET /users</h1>
-        {find(Users)}
-
-        <h1>Post /user</h1>
-        <form method="POST" action="/user/form">
-          <textarea name='json' rows='4' cols='45'>{write(user)}</textarea>
-          <input type='submit' value='Create user'/>
-        </form>
-        
-        <h1>GET /duties</h1>
-        {find(Duties)}
-
-        <h1>POST /duty</h1>
-        <form method="POST" action="/duty/form">
-          <textarea name='json' rows='4' cols='45'>{write(duty)}</textarea>
-          <input type='submit' value='Create duty'/>
-        </form>
-
-        <h1>GET /tasks</h1>
-        {find(Tasks)}
-
-        <h1>Post /task</h1>
-        <form method="POST" action="/task/form">
-          <textarea name='json' rows='9' cols='45'>{write(task)}</textarea>
-          <input type='submit' value='Create task'/>
-        </form>
-      </body>
-    </html>
-  }
+class DutyServlet extends DutyStack with Homepage {   
+  get("/") { home }
     
   // create by forms
   post("/duty/form") { 
@@ -78,7 +29,9 @@ class DutyServlet extends DutyStack {
   }
   
   post("/auth/form") {
-    mkAuth(params("json"))
+    val code: String = mkAuth(params("json"))
+    cookies.set("rm",code)
+    redirect("/")
   }
 
   // create
@@ -96,6 +49,11 @@ class DutyServlet extends DutyStack {
   
   post("/auth"){
     mkAuth(request.body)
+  }
+  
+  post("/log-out"){
+    cookies.delete(UtilObjects.Auth.COOKIE)
+    redirect("/")
   }
 
   post("/invite"){

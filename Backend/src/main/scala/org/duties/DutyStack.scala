@@ -29,17 +29,16 @@ import scala.language.postfixOps
 trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   implicit val formats = Serialization.formats(NoTypeHints)
   case class Error(error: String)
-  def mkError(msg: String) = write(Error(msg))
+  def mkError(msg: String): String = write(Error(msg))
 
   //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
   def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]) = try {
     val u = read[U](json)    
     db.getCollection(cols.name).insert(cols.toMongo(u))
-    //halt(202, <h1>Created {u.toString()}</h1>)
     redirect("/")
   } catch renderUnprocessable
   
-  def mkAuth(json: String) = try {
+  def mkAuth(json: String): String = try {
     import UtilObjects._
     val a: Auth = read[Auth](json)
     val pw = a.password.sha256.hex
@@ -59,11 +58,11 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   }
   
   // handle and render unprocessable
-  def renderUnprocessable : PartialFunction[Throwable, Any] = { 
+  def renderUnprocessable : PartialFunction[Throwable, String] = { 
     case unprocessable: JsonParseException => mkError("<h1>422: Unprocessable. </h1><p>" + unprocessable + "</p>") 
     case inexistentEntity: JsonMappingException => mkError("<h1>415: Unsupported media type. </h1> <p>Submitting a json body will succeed</p>")
     case invalid: MappingException => mkError("<h1>400 Bad Request</h1> <p>" + invalid.msg +"</p>")
-  }  
+  }
 
   /* wire up the precompiled templates */
   override protected def defaultTemplatePath: List[String] = List("/WEB-INF/templates/views")
