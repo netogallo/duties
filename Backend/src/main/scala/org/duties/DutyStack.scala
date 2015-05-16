@@ -19,31 +19,52 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import scala.collection.JavaConversions._
 
 //mongo
+import Models._
 import com.mongodb.casbah.Imports._
 import Mongo.Collections
 import Mongo.Collections._
 
+//crypto
+import javax.crypto.IllegalBlockSizeException
+
 import com.roundeights.hasher.Implicits._
 import scala.language.postfixOps
 
+import Auth._
+
 trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   implicit val formats = Serialization.formats(NoTypeHints)
+  
   case class Error(error: String)
   def mkError(msg: String): String = {
     contentType = "application/json"
     write(Error(msg))
   }
 
+  def requireAuth: String = try {
+    val ttl = cookies.get(Auth.COOKIE)
+    val u: Option[User] = ttl.flatMap(Auth.decrypt)
+    u match {
+      case None => halt(403, mkError("Please login"))
+      case Some(uz) => uz.username
+    }
+  } catch {
+    case hack: IllegalBlockSizeException => {
+      println("Warning. Got IllegalBlockSizeException " + cookies.get(Auth.COOKIE))
+      halt(500, mkError("Error"))
+    }
+  }
+
   //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
-  def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]) = try {
-    val u = read[U](json)    
+  def mk[U](u: U, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]): Unit = try {
     db.getCollection(cols.name).insert(cols.toMongo(u))
     redirect("/")
   } catch renderUnprocessable
   
+  def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]): Unit = mk(read[U](json), cols)  
+  
   def mkAuth(json: String): String = try {
     contentType = "application/json"
-    import UtilObjects._
     val a: Auth = read[Auth](json)
     val pw = a.password.sha256.hex
     val u = MongoDBObject("username" -> a.username, "password" -> pw)

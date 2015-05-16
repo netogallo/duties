@@ -10,14 +10,20 @@ import Models._
 import Mongo.Collections
 import Mongo.Collections._
 
+import Auth._
 import com.mongodb.DBObject
 
 class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/") { home }
   
   // create by forms
-  post("/duty/form") { 
-    mk[Duty](params("json"), Duties)
+  post("/duty/form") {
+    val in = params("json")
+    val username = requireAuth
+    val duty = read[Duty](in)
+    val isAuthor = username.equals(duty.author)
+    if (isAuthor) mk[Duty](duty, Duties)
+    else mkError("Author must be logged")
   }
 
   post("/user/form") {
@@ -29,8 +35,9 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
   
   post("/auth/form") {
-    val code: String = mkAuth(params("json"))
-    cookies.set("rm",code)
+    val json_code: String = mkAuth(params("json"))
+    val auth: AuthCode = read[AuthCode](json_code)
+    cookies.set("rm",auth.code)
     redirect("/")
   }
 
@@ -52,7 +59,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
   
   post("/log-out"){
-    cookies.delete(UtilObjects.Auth.COOKIE)
+    cookies.delete(Auth.COOKIE)
     redirect("/")
   }
 

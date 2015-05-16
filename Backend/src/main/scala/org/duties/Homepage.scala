@@ -13,7 +13,7 @@ trait Homepage {
   def home = {    
     val duty = Duty("kmels", Seq("netogallo", "kmels"), Seq())
     val user = User("kmels", "pw")
-    val auth = UtilObjects.Auth.fromUser(user)
+    val auth = Auth.fromUser(user)
     val hashedPw = "pw".sha256.hex
     val task = Task(penalty = 1.5d, name = "My task", recurrent = false,
                   description = Some("Optional description"), entrusted = Option(User("Optional entrusted/asignee", hashedPw)), votes = Seq(User("An optional user's vote", hashedPw)))
@@ -21,7 +21,7 @@ trait Homepage {
     val captcha = mkCaptcha
     session.put("captcha", captcha)
 
-    val auth_code = request.cookies.get(UtilObjects.Auth.COOKIE)
+    val auth_code = request.cookies.get(Auth.COOKIE)
 
     <html>
       <body>
@@ -37,9 +37,6 @@ trait Homepage {
           <input type='submit' value='Login'/>
         </form>
               
-        <h1>GET /users :: JSON </h1>
-        {find(Users)}
-
         <h1>GET /captcha :: () -> Image</h1>
         <img src="/captcha"/>
     
@@ -48,6 +45,9 @@ trait Homepage {
           <textarea name='text' rows='4' cols='45'>{captcha.getAnswer}</textarea>
           <input type='submit' value='Validate'/>
         </form>
+        
+        <h1>GET /users :: JSON </h1>
+        {find(Users)}
 
         <h1>POST /user :: JSON -> JSON</h1>
         <form method="POST" action="/user/form">
