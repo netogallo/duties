@@ -11,7 +11,6 @@
 	},
 	"required": ["username"]
     },
-
     "Task" : {
 	"description": "Object that represents a task that must be performed as part of a duty. Ie. a component of a duty that is assigned to one of the participants in a duty",
 	"type": "object",
@@ -101,12 +100,27 @@
 		"type": "array",
 		"items": {"$ref": "Task"}
 	    },
-            "id": {
+        "id": {
 		"type": "string",
 		"description": "Unique hash identifier for the duty. The field is absent on post requests and is defined by the backend."
 	    }
 	},
 
 	"required": ["name","author","participants"]
+    },
+
+    "Invite" : {
+    "type": "object",
+    "description": "An accomodation for potential tasks entrustees"
+    "properties": {
+        "author": { "type": "string", "description": "Owner of the duty and inviter." },
+        "advocate": { "type": "string", "description": "Potential entrustee" },
+        "duty": { "type": "$ref", "description": "Id of the duty. Useful if the tasks array is empty and advocate is only an observer"
+        "tasks": {
+            "type": "array",
+            "items": {"$ref": "Task" }
+        }
+    },
+    "required": ["author", "advocate"]
     }
 }

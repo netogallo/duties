@@ -14,10 +14,11 @@ object Models {
 import Models._
 import Mongo.Collections._
 import java.util.Date
-import java.util.{Base64, Calendar}
+import java.util.Calendar
 import java.security.Key
 import javax.crypto.Cipher
 import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
+import javax.xml.bind.DatatypeConverter
 
 object Auth {         
   case class AuthCode(code: String)
@@ -32,9 +33,10 @@ object Auth {
   }
   def SEPARATOR = ":"
 
+  
   // Cookie-code format.
-  def debase64(string: String): Array[Byte] = Base64.getDecoder.decode(string)
-  def enbase64(bytes: Array[Byte]): String = new String(Base64.getEncoder.encode(bytes))
+  def debase64(string: String): Array[Byte] = DatatypeConverter.parseBase64Binary(string)
+  def enbase64(bytes: Array[Byte]): String = DatatypeConverter.printBase64Binary(bytes)
 
   def decrypt(encoded: String): Option[User] = {
     val encrypted_bytes = debase64(encoded)
