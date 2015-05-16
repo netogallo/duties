@@ -8,7 +8,11 @@ import scala.reflect.runtime.universe._
 import scala.reflect._
 import java.lang.reflect.Constructor
 
+//mongo
 import Models._
+
+//data structures
+import scala.collection.JavaConversions._
 
 object Mongo {
   trait Collections[T] {
@@ -66,7 +70,7 @@ object Mongo {
         val n = o.as[String]("name")
         val d = Option(o.as[String]("description"))
         val p = o.as[Double]("penalty")
-        val e = Option(o.as[User]("entrusted"))
+        val e = Option(o.as[String]("entrusted"))
         val vs: Seq[DBObject] = o.as[BasicDBList]("votes").toSeq.map(_.asInstanceOf[DBObject])
         val r = o.as[Boolean]("recurrent")
         val id = o.as[String]("_id")
@@ -83,7 +87,7 @@ object Mongo {
       }
     }
 
-    object Duties extends Collections[Duty] { 
+    object Duties extends Collections[Duty] with MongoClient { 
 //      type T = Duty
       override def name = "duties" 
       override def fromMongo(o: com.mongodb.casbah.Imports.DBObject): Duty = { 
@@ -103,6 +107,11 @@ object Mongo {
           tasks = ts,
           id = o.as[String]("_id")
         )
+      }
+      def findId(id: String): Option[Duty] = {
+        val q = MongoDBObject("_id" -> id)
+        val d = db.getCollection(name).findOne(q)
+        Option(fromMongo(d))
       }
     }
 
@@ -128,6 +137,24 @@ object Mongo {
         val q = MongoDBObject("username" -> ident)
         val u = db.getCollection(name).findOne(q)
         Option(fromMongo(u))
+      }
+    }
+
+    implicit object Invites extends Collections[Invite] with MongoClient{
+      override def name = "invites"
+
+      def findAdvocate(a: String): Seq[Invite] = { 
+        val q = MongoDBObject("advocate" -> a)
+        db.getCollection(name).find(q).toArray().map(fromMongo)
+      }     
+      
+      override def fromMongo(o: DBObject) = {
+        Invite(
+          author = o.as[String]("author"),
+          advocate = o.as[String]("advocate"),
+          tasks = o.as[BasicDBList]("tasks").toSeq.map(t => Tasks.fromMongo(t.asInstanceOf[DBObject])),
+          duty = Option(o.as[String]("duty"))
+        )
       }
     }
   }

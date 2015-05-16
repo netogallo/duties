@@ -35,19 +35,21 @@ import Auth._
 trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   implicit val formats = Serialization.formats(NoTypeHints)
   
+  /* error response */
   case class Error(error: String)
   def mkError(msg: String): String = {
     contentType = "application/json"
     write(Error(msg))
   }
 
+  def maybeAuth: Option[String] = cookies.get(Auth.COOKIE)
+                                  .flatMap(Auth.decrypt)
+                                  .map(_.username)
+
+ /* auth */ 
   def requireAuth: String = try {
-    val ttl = cookies.get(Auth.COOKIE)
-    val u: Option[User] = ttl.flatMap(Auth.decrypt)
-    u match {
-      case None => halt(403, mkError("Please login"))
-      case Some(uz) => uz.username
-    }
+    def require = halt(403, mkError("Please login"))
+    maybeAuth.getOrElse(require)   
   } catch {
     case hack: IllegalBlockSizeException => {
       println("Warning. Got IllegalBlockSizeException " + cookies.get(Auth.COOKIE))
@@ -55,13 +57,15 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
     }
   }
 
-  //returns 202 CREATED if successful. 422 Unprocessable Entity otherwise.
+  /* creates obj, redirects to / if successful. 422 Unprocessable Entity otherwise. */
   def mk[U](u: U, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]): Unit = try {
     db.getCollection(cols.name).insert(cols.toMongo(u))
     redirect("/")
   } catch renderUnprocessable
   
-  def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]): Unit = mk(read[U](json), cols)  
+  def mk[U](json: String, cols: Collections[U])(implicit formats: Formats, mf: Manifest[U]): Unit = try {
+    mk(read[U](json), cols)  
+  } catch renderUnprocessable
   
   def mkAuth(json: String): String = try {
     contentType = "application/json"
@@ -84,12 +88,12 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
   
   // handle and render unprocessable
   def renderUnprocessable : PartialFunction[Throwable, String] = { 
-    case unprocessable: JsonParseException => mkError("<h1>422: Unprocessable. </h1><p>" + unprocessable + "</p>") 
-    case inexistentEntity: JsonMappingException => mkError("<h1>415: Unsupported media type. </h1> <p>Submitting a json body will succeed</p>")
-    case invalid: MappingException => mkError("<h1>400 Bad Request</h1> <p>" + invalid.msg +"</p>")
+    case unprocessable: JsonParseException => halt(422, mkError("<h1>422: Unprocessable. </h1><p>" + unprocessable + "</p>"))
+    case inexistentEntity: JsonMappingException => halt(415, mkError("<h1>415: Unsupported media type. </h1> <p>Submitting a json body will succeed</p>"))
+    case invalid: MappingException => halt(400,mkError("<h1>400 Bad Request</h1> <p>" + invalid.msg +"</p>"))
     case e: Exception => {
       println(e)
-      mkError("Congrats. You discovered a bug.")
+      halt(500,mkError("Congrats. You discovered a bug."))
     }
   }
 
