@@ -59,12 +59,24 @@ requirejs(["server","defs","widgets","hs"],function(server,defs,widgets,hs){
 	    }
 
 	    return (
+		React.createElement("div", {className: "invite"}, 
+		React.createElement("div", {className: "participants"}, 
+		this.state.invite.duty.participants.map(
+		    function(p){
+			return (
+			    React.createElement("span", {className: "label label-info label-participant"}, 
+			    p.username
+			    ));
+		    })
+		), 
 		React.createElement("div", {className: "available-tasks"}, 
+		React.createElement("h4", null, "Available Tasks"), 
 		React.createElement("div", {className: "checkbox"}, 
 		this.state.invite.tasks.map(function(task){
 		  return (React.createElement(InviteTask, {task: task}));
 	         }), 
 		price
+		)
 		)
 		)
 	    );
@@ -113,7 +125,12 @@ requirejs(["server","defs","widgets","hs"],function(server,defs,widgets,hs){
 	defs.InviteTaskS.create({task: {task_id: 4, penalty: 50, bounty: 10.4}, selected: false}),
 	defs.InviteTaskS.create({task: {task_id: 4, penalty: 50, bounty: 10.4}, selected: false})
     ]
-    var invite = {tasks: tasks, duty: {name: "Kaiser"}};
+    var participants = [
+	{username: "user1"},
+	{username: "user2"}
+    ];
+
+    var invite = {tasks: tasks, duty: {name: "Kaiser", participants: participants}};
 
     React.render(
 	React.createElement(Invites, {invites: [invite]}),

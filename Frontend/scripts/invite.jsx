@@ -59,12 +59,25 @@ requirejs(["server","defs","widgets","hs"],function(server,defs,widgets,hs){
 	    }
 
 	    return (
+		<div className="invite">
+		<div className="participants">
+		<h4>Participants</h4>
+		{this.state.invite.duty.participants.map(
+		    function(p){
+			return (
+			    <span className="label label-info label-participant">
+			    {p.username}
+			    </span>);
+		    })}
+		</div>
 		<div className="available-tasks">
+		<h4>Available Tasks</h4>
 		<div className="checkbox">
 		{this.state.invite.tasks.map(function(task){
 		  return (<InviteTask task={task} />);
 	         })}
 		{price}
+		</div>
 		</div>
 		</div>
 	    );
@@ -113,7 +126,12 @@ requirejs(["server","defs","widgets","hs"],function(server,defs,widgets,hs){
 	defs.InviteTaskS.create({task: {task_id: 4, penalty: 50, bounty: 10.4}, selected: false}),
 	defs.InviteTaskS.create({task: {task_id: 4, penalty: 50, bounty: 10.4}, selected: false})
     ]
-    var invite = {tasks: tasks, duty: {name: "Kaiser"}};
+    var participants = [
+	{username: "user1"},
+	{username: "user2"}
+    ];
+
+    var invite = {tasks: tasks, duty: {name: "Kaiser", participants: participants}};
 
     React.render(
 	<Invites invites={[invite]} />,
