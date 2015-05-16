@@ -18,12 +18,6 @@ object Mongo {
   trait Collections[T] {
     def name: String 
 
-    //persist any ref
-//    def mkRef[U] 
-
-    //convert toMongo any member of T that is a reference list
-    def mkRefSeq[U](n: String): Option[U => Seq[DBObject]] = None
-
     def toMongo[U](u: U)(implicit utag: TypeTag[U]): DBObject = {
       val clazz = u.getClass()
       val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList
@@ -32,18 +26,7 @@ object Mongo {
         val member = m.name.toString()
         val property = if (member == "id" || member == "task_id") "_id" else member
         
-        val value = 
-          if (mkRefSeq(property).isDefined){ 
-            val objs = mkRefSeq(property).get(u)
-            println(objs)
-            //val usrprops: List[MongoDBObject] = List(("a","b"))
-            //MongoDBList(MongoDBObject(usrprops), MongoDBObject(usrprops))
-            val builder = MongoDBList.newBuilder
-            builder ++= objs
-            builder.result
-          }
-        else
-          clazz.getMethod(member).invoke(u)
+        val value = clazz.getMethod(member).invoke(u)
 
         (property,value)
       })
@@ -57,21 +40,13 @@ object Mongo {
   object Collections {
     object Tasks extends Collections[Task] {
       override def name = "tasks"
-      override def mkRefSeq[U](n: String): Option[U => Seq[DBObject]] = n match{
-        case "votes" => Some((t:U) => {
-          val task = t.asInstanceOf[Task]                    
-          val mapped = task.votes.map(v => Users.toMongo(v))
-          mapped
-        })
-        case _ => None
-      }
         
       override def fromMongo(o: DBObject): Task = {
         val n = o.as[String]("name")
         val d = Option(o.as[String]("description"))
         val p = o.as[Double]("penalty")
         val e = Option(o.as[String]("entrusted"))
-        val vs: Seq[DBObject] = o.as[BasicDBList]("votes").toSeq.map(_.asInstanceOf[DBObject])
+        val rs: Seq[String] = o.as[BasicDBList]("votes").toSeq.map(_.asInstanceOf[String])
         val r = o.as[Boolean]("recurrent")
         val id = o.as[String]("_id")
 
@@ -80,7 +55,7 @@ object Mongo {
           description = d,
           penalty = p,
           entrusted = e,
-          votes = vs.map(o => Users.fromMongo(o)),
+          reports = rs,
           recurrent = r,
           task_id = id
         )
@@ -136,7 +111,7 @@ object Mongo {
       def findUsername(ident: String): Option[User] = {
         val q = MongoDBObject("username" -> ident)
         val u = db.getCollection(name).findOne(q)
-        Option(fromMongo(u))
+        Option(u).map(fromMongo)
       }
     }
 
