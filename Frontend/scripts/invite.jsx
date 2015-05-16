@@ -1,4 +1,4 @@
-requirejs(["server","defs","widgets","hs"],function(server,defs,widgets,hs){
+requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs){
 
     var InviteTask = React.createClass({
 	
@@ -133,8 +133,9 @@ requirejs(["server","defs","widgets","hs"],function(server,defs,widgets,hs){
 
     var invite = {tasks: tasks, duty: {name: "Kaiser", participants: participants}};
 
-    React.render(
-	<Invites invites={[invite]} />,
-	document.getElementById('main')
-    );
+    ui.render({
+	nav: [],
+	title: <h2>Duties</h2>,
+	body: <Invites invites={[invite]} />
+    });
 });
