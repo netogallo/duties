@@ -5,7 +5,7 @@
 
 .btc-curr{
 
-    background: url("/res/btc-ico-sm.png") no-repeat;
+    background: url("/Frontend/res/btc-ico-sm.png") no-repeat;
     background-size: contain;
 }
 
@@ -39,6 +39,11 @@
     /*min-height: 30px;*/
 }
 
+.task > .taskEmpty{
+
+    background: #d2d5da !important;
+}
+
 .task > .taskHead > h3{
 
     color: #ffffff;
@@ -50,6 +55,10 @@
     border: 2px solid #2f71aa;
     margin-top: -10px;
     padding: 0px 5px 5px 5px;
+}
+
+.task > .taskEmptyBody{
+    border: 2px solid #d2d5da !important;
 }
 
 .task > .taskTitle{

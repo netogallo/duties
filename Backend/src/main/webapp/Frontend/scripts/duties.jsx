@@ -1,4 +1,4 @@
-requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
+requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,util){
     
     
     console.log("what");
@@ -143,14 +143,19 @@ requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
 	    if(this.isReported())
 		reportCss.push("active");
 
+	    var report;
+	    
+	    if(this.props.task.entrusted)
+		report = <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>
+
 	    if(this.props.task){
 
 		return (
 		    <div className="task col-md-4">
-		    <div className="taskHead">
+		    <div className={util.if_(this.props.task.entrusted)("taskHead")("taskHead taskEmpty")}>
 		    <h3>{this.props.task.name}</h3>
 		    </div>
-		    <div className="taskBody">
+		    <div className="taskBody taskEmptyBody">
 		    <div className="taskStatus">
 		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.votes.length}</span></span>
 		    &nbsp;
@@ -162,7 +167,7 @@ requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
 		    {this.props.task.description}
 		    </div>
 		    <span className="report">
-		    <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>
+		    {report}
 		    </span>
 		    </div>
 		    </div>);
@@ -232,7 +237,7 @@ requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
 
 	    var taskSave = function(taskProps){
 		
-		var task = TaskS.create({
+		var task = defs.TaskS.create({
 		    name: taskProps.task_name,
 		    entrusted: "",
 		    description: taskProps.task_description,
@@ -248,6 +253,24 @@ requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
 		<TaskEdit onSubmit={taskSave} className="modal-body"/>
 		</Dialog>);
 
+	    var operations;
+
+	    if(this.props.duty && this.props.duty.unsaved)
+		operations = (
+		    <div className="taskOperations">
+		    {dialog}
+		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Create Task</button>
+		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Save Duty</button>
+		    </div>);
+	    else
+		operations = (
+		    <div className="taskOperations">
+		    {dialog}
+		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Send Invite</button>
+		    </div>);
+		
+
+
 	    if(this.props.duty)
 		return (
 		    <div className="duty" style={this.props.duty == {} ? {display:'none'} : {}}>
@@ -257,15 +280,16 @@ requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
 			return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{penalty[participant.username] ? penalty[participant.username] : 0}</span></span>);
 		    })}
 		    </div>
-		    <div className="taskOperations">
-		    {dialog}
-		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Create Task</button>
-		    </div>
+		    {operations}
 		    <div className="tasks">
+		    <div>
 		    <h4>Tasks Assigned to Users</h4>
 		    {boundTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
+		    </div>
+		    <div>
 		    <h4>Free Tasks</h4>
 		    {freeTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
+		    </div>
 		    </div>
 		    </div>);
 	    else
@@ -328,14 +352,15 @@ requirejs(["server","signal","defs","ui"],function(server,signal,defs,ui){
 	    var duty = {
 		name: dutySpec.duty_name,
 		participants: [],
-		tasks: []
+		tasks: [],
+		unsaved: true
 	    };
 
 	    server.saveDuty(duty,function(result){
 
 		if(!result.error){
 
-		    var dutyS = DutyS.create(duty);
+		    var dutyS = defs.DutyS.create(duty);
 
 		    dutyS.setUpdate(function(){
 			self.setState({x:'y'});

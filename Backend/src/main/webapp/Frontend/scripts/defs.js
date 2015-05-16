@@ -18,7 +18,8 @@ define(["signal"],function(signal){
     var DutyS = Signal({
 	name: {type: Types.prim},
 	participants: {type: Types.prim},
-	tasks: {type: Types.array.of(TaskS)}
+	tasks: {type: Types.array.of(TaskS)},
+	unsaved: {type: Types.prim}
     });
 
     return {
