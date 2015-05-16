@@ -25,11 +25,15 @@ trait Homepage {
 
     <html>
       <body>
-        <p>Last auth: {if (auth_code.isDefined) auth_code.get else null }
-        </p>
-        <form method="POST" action="/log-out">
-        <input type='submit' value='Logout'/>
-        </form>
+        {
+        if (auth_code.isDefined)
+          <p>Last auth: {if (auth_code.isDefined) auth_code.get else null }
+          </p>
+
+          <form method="POST" action="/log-out">
+          <input type='submit' value='Logout'/>
+          </form>
+        }            
 
         <h1>POST /auth :: JSON -> JSON </h1>
         <form method="POST" action="/auth/form">
