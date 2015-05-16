@@ -9,7 +9,6 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 	    {json: JSON.stringify({
 		username: $('input[name="email"]').val(),
 		password: $('input[name="password"]').val(),
-		id: "fasd89h38h"
 	    })})
 	    .done(
 		function(data){
@@ -30,7 +29,7 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 		<form onSubmit={this.createUser}>
 		<label htmlFor="email">Email</label>
 		<input type="text" id="email" className="form-control" name="email"></input>
-		<label htmlFor="email">Password</label>
+		<label htmlFor="password">Password</label>
 		<input type="password" id="password" className="form-control" name="password"></input>
 		<input type="submit" value="Create User"></input>
 		</form>

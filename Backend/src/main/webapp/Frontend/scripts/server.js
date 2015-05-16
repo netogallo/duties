@@ -6,7 +6,8 @@ define(function(){
 	api: {
 	    
 	    host: hostname,
-	    user: hostname + "/user"
+	    user: hostname + "/user/form",
+	    login: hostname + "/auth/form",
 
 	},
 
