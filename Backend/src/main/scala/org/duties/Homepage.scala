@@ -25,6 +25,7 @@ trait Homepage {
 
     def loggedUser = maybeAuth
     def isLogged = loggedUser.isDefined
+
     val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
 
     val invite = loggedUser.map(author => Invite(UserIdent(author), netogallo, Seq(TaskRef("a task id"))))

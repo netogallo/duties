@@ -18,15 +18,13 @@ object Mongo {
   trait Collections[T] {
     def name: String 
 
-    def mkRefSeq[U](n: String): Option[U => Seq[DBObject]] = None
-
     def toMongo[U](u: U)(implicit utag: TypeTag[U]): MongoDBObject = {
       val clazz = u.getClass()
       val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList
        
       val elems: List[(String, AnyRef)] = members.map(m => {
         val member = m.name.toString()
-        val property = if (member == "id" || member == "task_id") "_id" else member
+        val property = if (member == "id") "_id" else member
         
         val value = clazz.getMethod(member).invoke(u)
 
@@ -74,7 +72,6 @@ object Mongo {
         builder ++= d.participants.map(ui => UserIdents.toMongo(ui))
         duty.update("participants", builder.result)        
         duty.update("author", UserIdents.toMongo(d.author))
-
         val builder2 = MongoDBList.newBuilder
         builder2 ++= d.tasks.map(t => Tasks.toMongo(t))
         duty.update("tasks", builder2.result)
@@ -129,9 +126,23 @@ object Mongo {
       override def name = "invites"
 
       def findAdvocate(a: String): Seq[Invite] = { 
-        val q = MongoDBObject("advocate" -> a)
+        val q = MongoDBObject("advocate" -> UserIdents.toMongo(UserIdent(a)))
         db.getCollection(name).find(q).toArray().map(fromMongo)
-      }     
+      }
+
+      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
+        val invite = super.toMongo(u)
+        val i = u.asInstanceOf[Invite]
+
+        invite.update("author", UserIdents.toMongo(i.author))
+        invite.update("advocate", UserIdents.toMongo(i.advocate))
+
+        val builder = MongoDBList.newBuilder
+        builder ++= i.tasks.map(t => TaskRefs.toMongo(t))
+        invite.update("tasks", builder.result)
+        
+        invite
+      }
       
       override def fromMongo(o: DBObject) = {
         Invite(
