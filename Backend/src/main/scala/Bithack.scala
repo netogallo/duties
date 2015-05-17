@@ -27,11 +27,11 @@ object Bithack {
 
   // Connect to the bitcoin network as a node
   def connect(): Unit = {
+    NETWORK.addAddress(new PeerAddress(InetAddress.getLocalHost()))
+    NETWORK.addPeerDiscovery(new DnsDiscovery(OPERATING_NETWORK))
+    NETWORK.start()
     new Thread(new Runnable {
       def run() {
-        NETWORK.addAddress(new PeerAddress(InetAddress.getLocalHost()))
-        NETWORK.addPeerDiscovery(new DnsDiscovery(OPERATING_NETWORK))
-        NETWORK.start()
         NETWORK.downloadBlockChain()
       }
     }).start

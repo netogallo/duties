@@ -28,6 +28,8 @@ define(["hs"],function(hs){
 
 		    var res = {
 
+			isSignal: true,
+
 			restore: function(){
 			    
 			    var res = {};
@@ -74,21 +76,25 @@ define(["hs"],function(hs){
 
 			    this[prop] = value;
 
-			    function setSignal(obj){
+			    function setSignal(obj_,constr){
+
+				var obj = obj_.isSignal ? obj_ : constr(obj_)
+				//if(!obj.isSignal)
+				    
 
 				obj.setUpdate(function(){self.update.apply(self,[])});
 			    }
 
 			    if(type.type == signalT){
 				
-				setSignal(self[prop]);
+				setSignal(self[prop],type.type.create);
 			    }
 
 			    else if(type.type && type.type.type == arrayT && type.type.of.type == signalT){
 
 				for(var i in self[prop]){
 				    console.log(type.type.of);
-				    setSignal(self[prop][i]);
+				    setSignal(self[prop][i],type.type.of.create);
 				}
 			    }
 			}

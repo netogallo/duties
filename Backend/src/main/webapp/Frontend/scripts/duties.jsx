@@ -1,4 +1,4 @@
-requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,util){
+requirejs(["server","signal","defs","ui","util","widgets"],function(server,signal,defs,ui,util,widgets){
     
     
     console.log("what");
@@ -201,6 +201,78 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	}
     });
 
+    var splitTasks = function(tasks){
+
+	return hs.partition(
+	    function(t){return t.entrusted;},
+	    tasks);
+
+	
+    }
+
+    var DutyInvite = React.createClass({
+	getInitialState: function(){
+
+	    return {participants: [],tasks: []};
+	},
+
+	toggle: hs.curry(function(self,elem,collection){
+
+	    var elems = self[collection];
+
+	    for(var e in elems){
+
+		if(elems[e] == elem){
+		    elems[e] = undefined;
+		    self.setState({participants: self.state.participants});
+		    return;
+		}
+	    }
+	    self.state.participants.push(participant);
+	    self.setState({participants: self.state.participants});
+
+	}),
+
+	toggleParticipant: function(participant){
+	    
+	    var self = this;
+	    return function(event){
+
+		
+	    }
+	},
+
+	render: function(){
+	    var self = this;
+	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
+	    //var boundTasks = tasks[0];
+	    console.log(tasks);
+	    var freeTasks = tasks[1];
+	    var participants = this.props.duty ? this.props.duty.participants : [];
+	    console.log(this.props.duty);
+	    return (
+		<div className={this.props.className} style={{overflow:'auto'}}>
+		<h3>Invite Users</h3>
+		<div>
+		{participants.map(function(participant){
+		    return (
+			<span className="label label-info label-participant label-input">
+			<input onChange={self.toggleParticipant(participant.username)} type="checkbox" />
+			{" "+participant.username}
+			</span>);
+		})};
+		</div>
+		<div>
+		{freeTasks.map(function(task){
+		    console.log(task);
+		    return <widgets.InviteTask task={task}/>;
+		})}
+		</div>
+		</div>
+	    );
+	}
+    });
+
     var Duty = React.createClass({
 
 	saveDuty: function(e){
@@ -226,10 +298,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	    var reports = {};
 	    var penalty = {};
 
-	    var tasks = hs.partition(
-		function(t){return t.entrusted;},
-		this.props.duty ? this.props.duty.tasks : []);
-
+	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
 	    var boundTasks = tasks[0];
 	    var freeTasks = tasks[1];
 
@@ -271,6 +340,11 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 		<TaskEdit onSubmit={taskSave} className="modal-body"/>
 		</Dialog>);
 
+	    var invite = (
+		<Dialog id="duty-invite">
+		<DutyInvite duty={this.props.duty} onSubmit={this.sendInvite} className="modal-body"/>
+		</Dialog>);
+
 	    var operations;
 
 	    if(this.props.duty && this.props.duty.unsaved)
@@ -283,8 +357,8 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	    else
 		operations = (
 		    <div className="taskOperations">
-		    {dialog}
-		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Send Invite</button>
+		    {invite}
+		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#duty-invite">Send Invite</button>
 		    </div>);
 		
 
@@ -330,21 +404,26 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	loadDuties: function(){
 	    
 	    var self = this;
-	    $.get(server.api.duties)
+	    server.api.dutiesReq({type: 'GET'})
 	    .done(function(data){
-
-		self.setState({duties: hs.map(defs.DutyS.create)});
+		self.setState({duties: hs.map(defs.DutyS.create,data)});
 	    });
 
 	},
 
 	getInitialState: function(){
 	    var self = this;
-	    //this.loadDuties();
-
 	    
-	    var dutyList = this.props.duties ? this.props.duties : [];
-
+	    var dutyList;
+	    
+	    if(this.props.duties)
+		dutyList = this.props.duties;
+	    else{
+		dutyList = [];
+		this.loadDuties();
+	    }
+	    
+	    /*
 	    for(var duty in dutyList){
 
 		dutyList[duty].setUpdate(
@@ -353,6 +432,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 			self.setState({x: 'y'});
 		    });
 	    }
+	    */
 	    return {duties: dutyList, duty: undefined};
 	    
 	    
@@ -436,6 +516,6 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
     ui.render({
 	nav: ui.LoggedMenu,
 	title: <h2>Duties</h2>,
-	body: <Duties duties={duties}/>    
+	body: <Duties />    
     });
 });

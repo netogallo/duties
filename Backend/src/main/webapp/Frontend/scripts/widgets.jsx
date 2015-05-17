@@ -1,5 +1,36 @@
 define(["defs","util","hs"],function(defs,util,hs){
 
+    var InviteTask = React.createClass({
+	
+	onChange: function(value){
+	    
+	    this.props.task.update({selected: !this.props.task.selected});
+	},
+
+	render: function(){
+	    var task = this.props.task;
+
+	    return (
+		<div className="task col-md-4">
+		<div className="taskHead">
+		<h3><input onChange={this.onChange} type="checkbox" value={this.props.task.selected}>Test</input></h3>
+		</div>
+		<div className="taskBody">
+		<div className="taskStatus">
+		<span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>
+		&nbsp;
+		<span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{task.penalty}</span>
+		</div>
+		<div className="description">
+		{task.description}
+		</div>
+		</div>
+		</div>
+	    );
+	}
+    });
+    
+
     var List = React.createClass({
 
 	select: function(k,v){
@@ -36,6 +67,7 @@ define(["defs","util","hs"],function(defs,util,hs){
     });
 
     return {
-	List: List
+	List: List,
+	InviteTask: InviteTask
     };
 });

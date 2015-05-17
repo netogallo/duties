@@ -7,11 +7,17 @@ define(["hs"],function(hs){
 
     var req = hs.curry(function(url,conf){
 
+	if(!conf)
+	    conf = {};
+
 	if(!conf.contentType)
 	    conf.contentType = 'application/json';
 
+	if(!conf.dataType)
+	    conf.dataType = 'json';
+
 	if(typeof conf.data != typeof "")
-	    conf.data = JSON.stringify(conf.data)
+	    conf.data = JSON.stringify(conf.data);
 
 	if(!conf.type)
 	    conf.type = 'POST';
@@ -51,6 +57,7 @@ define(["hs"],function(hs){
 	    loginReq: loginReq,
 	    invites: hostname + "/invites",
 	    duties: hostname + "/duties",
+	    dutiesReq: req(hostname + "/duties"),
 	    duty: hostname + "/duty",
 	    dutyReq: req(hostname + "/duty"),
 
