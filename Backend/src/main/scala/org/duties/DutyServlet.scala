@@ -19,7 +19,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   def mkDuty(in: String) = {
     val username = requireAuth
     val duty = read[Duty](in)
-    val isAuthor = username.equals(duty.author)
+    val isAuthor = username.equals(duty.author.username)
     if (isAuthor) mk[Duty](duty, Duties)
     else mkError("Author must be logged")
   }
@@ -27,7 +27,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   def mkInvite(in: String) = {
     val username = requireAuth
     val invite = read[Invite](in)
-    val isAuthor = username.equals(invite.author)
+    val isAuthor = username.equals(invite.author.username)
     if (isAuthor) mk[Invite](invite, Invites)
     else mkError("Author must be logged")
   }
@@ -51,8 +51,8 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
       else halt(404,mkError("<p>Not found</p>"))
     } catch renderUnprocessable
   }
-  
-  post("/invite/form") {
+    
+  post("/invite") {
     mkInvite(request.body)
   }
 
@@ -64,16 +64,12 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   post("/user") { 
     mk[User](request.body, Users) 
   }
-
-  post("/task") {
-    mk[Task](request.body, Tasks)
-  }  
   
   post("/login") {
     try {
       val authCode = mkAuth(request.body)
       if (authCode.isDefined) authCode.get
-      else halt(404, "<p>Not Found</p>")
+      else halt(404, mkError("<p>Not Found</p>"))
     } catch renderUnprocessable
   }
   
@@ -82,7 +78,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     redirect("/")
   }
 
-  post("/invite"){
+  post("/invite/form"){
     mkInvite(params("json"))
   }
 
@@ -93,10 +89,6 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
 
   get("/users") {
     find(Users)
-  }
-
-  get("/tasks") {
-    find(Tasks)
   }
 
   get("/invites") {

@@ -16,11 +16,15 @@ import javax.xml.bind.DatatypeConverter
 object Models {
   case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reports: Seq[String] = Nil, recurrent: Boolean, task_id: String = (new ObjectId().toString()))
 
-  case class Duty(author: String, participants: Seq[String], tasks: Seq[Task], id: String = (new ObjectId().toString()))
+  case class Duty(author: UserIdent, participants: Seq[UserIdent], tasks: Seq[Task], id: String = (new ObjectId().toString()))
   
   case class User(username: String, password: String, id: String = (new ObjectId().toString()))
 
-  case class Invite(author: String, advocate: String, tasks: Seq[Task] = Seq(), duty: Option[String] = None)
+  case class UserIdent(username: String)
+
+  case class TaskRef(task_id: String)
+
+  case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[String] = None, id: String = (new ObjectId().toString()))
 }
 
 object Auth {         

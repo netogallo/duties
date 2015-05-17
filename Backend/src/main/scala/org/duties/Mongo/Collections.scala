@@ -18,7 +18,9 @@ object Mongo {
   trait Collections[T] {
     def name: String 
 
-    def toMongo[U](u: U)(implicit utag: TypeTag[U]): DBObject = {
+    def mkRefSeq[U](n: String): Option[U => Seq[DBObject]] = None
+
+    def toMongo[U](u: U)(implicit utag: TypeTag[U]): MongoDBObject = {
       val clazz = u.getClass()
       val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList
        
@@ -46,7 +48,7 @@ object Mongo {
         val d = Option(o.as[String]("description"))
         val p = o.as[Double]("penalty")
         val e = Option(o.as[String]("entrusted"))
-        val rs: Seq[String] = o.as[BasicDBList]("votes").toSeq.map(_.asInstanceOf[String])
+        val rs: Seq[String] = o.as[BasicDBList]("reports").toSeq.map(_.asInstanceOf[String])
         val r = o.as[Boolean]("recurrent")
         val id = o.as[String]("_id")
 
@@ -63,22 +65,30 @@ object Mongo {
     }
 
     object Duties extends Collections[Duty] with MongoClient { 
-//      type T = Duty
       override def name = "duties" 
-      override def fromMongo(o: com.mongodb.casbah.Imports.DBObject): Duty = { 
-        val ps: Seq[String] = o.as[BasicDBList]("participants").map(_.toString)
 
-        val ts: Seq[Task] = o.as[BasicDBList]("tasks").map{ o => 
-          {
-            println("DBOBJECTLIST: "+ o.toString())
-            null
-          //Tasks.fromMongo(o)
-          }
-        }
+      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
+        val duty = super.toMongo(u)
+        val d = u.asInstanceOf[Duty]
+        val builder = MongoDBList.newBuilder
+        builder ++= d.participants.map(ui => UserIdents.toMongo(ui))
+        duty.update("participants", builder.result)        
+        duty.update("author", UserIdents.toMongo(d.author))
+
+        val builder2 = MongoDBList.newBuilder
+        builder2 ++= d.tasks.map(t => Tasks.toMongo(t))
+        duty.update("tasks", builder2.result)
+        duty
+      }
+
+      override def fromMongo(o: com.mongodb.casbah.Imports.DBObject): Duty = { 
+        val ps: Seq[DBObject] = o.as[BasicDBList]("participants").map(_.asInstanceOf[DBObject])
+
+        val ts: Seq[Task] = o.as[BasicDBList]("tasks").map{ o => Tasks.fromMongo(o.asInstanceOf[DBObject])}
 
         Duty(
-          author = o.as[String]("author"),
-          participants = ps,
+          author = UserIdents.fromMongo(o.as[MongoDBObject]("author")),
+          participants = ps.map(UserIdents.fromMongo),
           tasks = ts,
           id = o.as[String]("_id")
         )
@@ -94,7 +104,7 @@ object Mongo {
       import com.roundeights.hasher.Implicits._
       import scala.language.postfixOps
       override def name = "users"
-      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): DBObject = {
+      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val unencrypted = super.toMongo(u)
         unencrypted.update("password", u.asInstanceOf[User].password.sha256.hex)
         unencrypted 
@@ -125,12 +135,22 @@ object Mongo {
       
       override def fromMongo(o: DBObject) = {
         Invite(
-          author = o.as[String]("author"),
-          advocate = o.as[String]("advocate"),
-          tasks = o.as[BasicDBList]("tasks").toSeq.map(t => Tasks.fromMongo(t.asInstanceOf[DBObject])),
+          author = UserIdents.fromMongo(o.as[DBObject]("author")),
+          advocate = UserIdents.fromMongo(o.as[DBObject]("advocate")),
+          tasks = o.as[BasicDBList]("tasks").toSeq.map(t => TaskRefs.fromMongo(t.asInstanceOf[DBObject])),
           duty = Option(o.as[String]("duty"))
         )
       }
+    }
+
+    implicit object UserIdents extends Collections[UserIdent] {
+      def name = "unpersisted"      
+      def fromMongo(o: DBObject) = UserIdent(username = o.as[String]("username"))
+    }
+
+    implicit object TaskRefs extends Collections[TaskRef] {
+      def name = "unpersisted"
+      def fromMongo(o: DBObject): TaskRef = TaskRef(task_id = o.as[String]("task_id"))
     }
   }
 }
