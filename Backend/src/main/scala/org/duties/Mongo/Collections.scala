@@ -67,6 +67,7 @@ object Mongo {
         new Task(
           name = n,
           description = d,
+          state = o.as[String]("state"),
           penalty = p,
           entrusted = e,
           reported_by = uids,
