@@ -71,8 +71,10 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     if (!task.get.is_paid) mkError("This task is not paid or entrusted")
     //todo: check if state is entrusted
     //todo: check if reporter is owner
-    else mk[Report](rep, Reports)
-    
+    else {
+      println("!! MAKIN REPORT")
+      mk[Report](rep, Reports)
+    }
   } catch renderUnprocessable
 
   // create by forms
@@ -136,6 +138,26 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     mk[Report](request.body, Reports)
   }
 
+  def mapTasks(json: String) = try {
+      val taskrefs = read[Seq[TaskRef]](json)            
+      val tasks: Seq[(TaskRef,Option[Task])] = taskrefs.map(r => (r, Tasks.fromRef(r)))
+      val inexistent = tasks.find(t => !t._2.isDefined)     
+      
+      println("TASKS...: " +tasks)
+      println(inexistent)
+      
+      if (inexistent.isDefined) mkError("This task is inexistent: " + inexistent.get._1.task_id)
+      else write(tasks.map(_._2).flatten)
+    } catch renderUnprocessable
+
+  post("/tasks/form"){
+    mapTasks(params("json"))
+  }
+
+  post("/tasks"){
+    mapTasks(request.body)
+  }
+
   // list
   get("/duties") {
     find(Duties)
@@ -165,5 +187,5 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/address"){ 
     val u = requireAuth
     taskOutput(request.body, u) 
-  }
+  }  
 }

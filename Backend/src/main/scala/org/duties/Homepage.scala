@@ -27,6 +27,7 @@ trait Homepage {
     def isLogged = loggedUser.isDefined
     val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
     val ref = TaskRefs.fromTask(task)
+    val refs = Seq(ref)
     val invite = loggedUser.map(author => Invite(kmels, netogallo, Seq(ref)))
     val report = Report(kmels, ref)
 
@@ -74,6 +75,12 @@ trait Homepage {
              {if (invites.isEmpty) "You don't have invites." else write(invites)}
           </p>
        }
+
+        <h1>POST /tasks :: JSON -> JSON</h1>
+        <form method="POST" action="/tasks/form">
+          <textarea name='json' rows='9' cols='45'>{write(refs)}</textarea>
+          <input type='submit' value='Map refs'/>
+        </form>
 
         <h1>POST /invite :: JSON -> JSON</h1>
         <form method="POST" action="/invite/form">

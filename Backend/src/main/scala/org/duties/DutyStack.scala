@@ -92,6 +92,7 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
     case invalid: MappingException => halt(400,mkError("<h1>400 Bad Request</h1> <p>" + invalid.msg +"</p>"))
     case e: Exception => {
       println(e)
+      e.printStackTrace()
       halt(500,mkError("Congrats. You discovered a bug."))
     }
   }
