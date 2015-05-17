@@ -9,22 +9,20 @@ import scala.collection.JavaConversions._
 
 object WalletListener extends AbstractWalletEventListener with MongoClient {
 
+  def findTaskOutput(adr: Address): Option[TaskPayment] = ???
   
   override def onCoinsReceived(w: Wallet, tx: Transaction, prevBalance: Coin, newBalance: Coin): Unit = {
     
     val value = tx.getValue(w)    
-    val outputs = tx.getWalletOutputs(w)
-    val addresses = outputs.map(_.getAddressFromP2PKHScript(Bithack.OPERATING_NETWORK))
+    val btc_outputs = tx.getWalletOutputs(w)
+    def getAddress: TransactionOutput => Address = out =>  out.getAddressFromP2PKHScript(Bithack.OPERATING_NETWORK)
 
-    val refs: Seq[Option[TaskRef]] = addresses.map(adr => TaskAddresses.findAddress(adr))
+    val btc_addresses = btc_outputs map getAddress
     
-    println(refs)
-
-    val tasks: Seq[Option[Task]] = refs.flatMap(r => {
-      r.map(Tasks.fromRef)
+    val payments = btc_addresses.flatMap(btc_adr => {      
+      findTaskOutput(btc_adr)
     })
-    
-    println(tasks)
+
     
   }
 }

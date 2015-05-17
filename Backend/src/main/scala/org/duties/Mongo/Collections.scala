@@ -86,11 +86,11 @@ object Mongo {
           ref 
         })
         
-        //generate task addresses too
-        val addresses: Seq[Seq[TaskAddress]] = refs.map(ref => {
+        //generate task outputs too
+        val outputs: Seq[Seq[TaskOutput]] = refs.map(ref => {
           members.map(m => {
-            val address = TaskAddress(ref, m, Bithack.mkReceivingAddress.toString)
-            db.getCollection(TaskAddresses.name).insert(TaskAddresses.toMongo(address))
+            val address = TaskOutput(ref, m, Bithack.mkReceivingAddress.toString)
+            db.getCollection(TaskOutputs.name).insert(TaskOutputs.toMongo(address))
             address
           })
         })
@@ -197,15 +197,15 @@ object Mongo {
         TaskRef(task_id = t.id, duty_id = d.map(_.id))
     }
 
-    implicit object TaskAddresses extends Collections[TaskAddress] with MongoClient {
-      def name = "task_addresses"
+    implicit object TaskOutputs extends Collections[TaskOutput] with MongoClient {
+      def name = "task_outputs"
       def findAddress(adr: Address): Option[TaskRef] = {
         val q = MongoDBObject("btc_address" -> adr.toString)
         val o = Option(db.getCollection(name).findOne(q))
         val taskAddress = o.map(fromMongo)
         taskAddress.flatMap(a => TaskRefs.find(a.task.task_id))
       }
-      def findTask(ref: TaskRef, uid: UserIdent): Option[TaskAddress] = {
+      def findOutput(ref: TaskRef, uid: UserIdent): Option[TaskOutput] = {
         val q = MongoDBObject("owner" -> UserIdents.toMongo(uid), "task" -> TaskRefs.toMongo(ref))
         val o = Option(db.getCollection(name).findOne(q))
         o.map(fromMongo)
@@ -213,7 +213,7 @@ object Mongo {
 
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val ta = super.toMongo(u)
-        val t = u.asInstanceOf[TaskAddress]
+        val t = u.asInstanceOf[TaskOutput]
         ta.update("btc_address", t.btc_address.toString)
         ta.update("owner", UserIdents.toMongo(t.owner))        
         ta.update("task", TaskRefs.toMongo(t.task))        
@@ -221,7 +221,7 @@ object Mongo {
       }
       def fromMongo(o: DBObject) = {       
         val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))        
-        TaskAddress(
+        TaskOutput(
           task = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
           owner = UserIdents.fromMongo(o.as[MongoDBObject]("owner")),
           btc_address = address.toString
