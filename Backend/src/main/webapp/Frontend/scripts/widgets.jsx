@@ -1,26 +1,78 @@
 define(["defs","util","hs"],function(defs,util,hs){
 
+    var Search = React.createClass({
+
+	onChange: function(event){
+	    var self = this;
+	    if(this.props.onChange)
+		this.props.onChange(
+		    $('input[name="suggest-text"]').val(),
+		    function(results){
+			self.props.sig.update({suggestions: results});
+		    });
+	},
+
+	onClick: hs.curry(function(self,value,event){
+
+	    var changed = false;
+	    for(var sel in self.props.sig.selection){
+
+		if(self.props.sig.selection[sel] == value){
+		    changed = true;
+		}
+	    }
+
+	    
+	    if(!changed)
+		self.props.sig.selection.push(value);
+
+	    console.log(self.props.sig.selection);
+	    self.props.sig.update({selection: self.props.sig.selection});
+	}),
+	
+	render: function(){
+	    var self = this;
+
+	    return (
+		<div className="search-box">
+		<label htmlFor="suggest-text">Search User</label>
+		<input name="suggest-text" id="suggest-text" onChange={this.onChange} type="text"/>
+		<div className="selection-box">
+		{this.props.sig.selection.map(
+		    function(elem){
+			return (<button type="button" className="btn btn-default"> {elem.str} </button>);
+		    })}
+		</div>
+		<div className="suggest-box">
+		{this.props.sig.suggestions.map(
+		    function(elem){
+			console.log(elem);
+			return (<button type="button" onClick={self.onClick(self)(elem)} className="btn btn-default">{elem.str}</button>);
+		    })}
+		</div>
+		</div>);
+	}
+    });
+
     var InviteTask = React.createClass({
 	
 	getInitialState: function(){
-
+	    console.log("state");
 	    return {selected: this.props.selected ? true : false};
 	},
 
 	onChange: function(value){
 	    
-	    this.setState({selected: !this.state.selected});
-	    if(this.props.onChange)
-		this.props.onChange(this.state.selected);
+	    this.props.task.update({status: !this.props.task.status});
 	},
 
 	render: function(){
-	    var task = this.props.task;
-
+	    var task = this.props.task.value;
+	    console.log(task);
 	    return (
 		<div className="task col-md-4">
 		<div className="taskHead">
-		<h3><input onChange={this.onChange} type="checkbox" value={this.state.selected}>Test</input></h3>
+		<h3><input onChange={this.onChange} type="checkbox" value={this.props.task.status}></input>{task.name}</h3>
 		</div>
 		<div className="taskBody">
 		<div className="taskStatus">
@@ -75,6 +127,7 @@ define(["defs","util","hs"],function(defs,util,hs){
 
     return {
 	List: List,
-	InviteTask: InviteTask
+	InviteTask: InviteTask,
+	Search: Search
     };
 });
