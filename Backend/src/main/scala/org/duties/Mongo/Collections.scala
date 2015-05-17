@@ -166,7 +166,8 @@ object Mongo {
           author = UserIdents.fromMongo(o.as[DBObject]("author")),
           advocate = UserIdents.fromMongo(o.as[DBObject]("advocate")),
           tasks = o.as[BasicDBList]("tasks").toSeq.map(t => TaskRefs.fromMongo(t.asInstanceOf[DBObject])),
-          duty = Option(o.as[String]("duty"))
+          duty = Option(o.as[String]("duty")),
+          id = o.as[String]("_id")
         )
       }
     }
