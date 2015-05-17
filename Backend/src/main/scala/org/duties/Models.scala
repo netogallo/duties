@@ -13,6 +13,8 @@ import javax.crypto.Cipher
 import javax.crypto.spec.{IvParameterSpec, SecretKeySpec}
 import javax.xml.bind.DatatypeConverter
 
+import org.bitcoinj.core.Address
+
 object Models {
   case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reports: Seq[String] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString()))
 
@@ -22,8 +24,10 @@ object Models {
 
   case class UserIdent(username: String)
 
-  case class TaskRef(task_id: String)
-
+  case class TaskRef(task_id: String, duty_id: Option[String] = None)
+  
+  case class TaskAddress(task_id: String, btc_address : Address)
+ 
   case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[String] = None, id: String = (new ObjectId().toString()))
 }
 

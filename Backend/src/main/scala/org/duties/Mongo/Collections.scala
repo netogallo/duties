@@ -14,6 +14,8 @@ import Models._
 //data structures
 import scala.collection.JavaConversions._
 
+import org.bitcoinj.core.Address
+
 object Mongo {
   trait Collections[T] {
     def name: String 
@@ -35,9 +37,15 @@ object Mongo {
   }
   
   object Collections {
-    object Tasks extends Collections[Task] {
+    object Tasks extends Collections[Task] with MongoClient {
       override def name = "tasks"
         
+      def fromRef(r: TaskRef): Option[Task] = {
+        val q = MongoDBObject("task_id" -> r.task_id)
+        val o = Option(db.getCollection(name).findOne(q))
+        o.map(fromMongo)
+      }
+
       override def fromMongo(o: DBObject): Task = {
         val n = o.as[String]("name")
         val d = Option(o.as[String]("description"))
@@ -61,13 +69,21 @@ object Mongo {
 
     object Duties extends Collections[Duty] with MongoClient { 
       override def name = "duties" 
-
+      
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val duty = super.toMongo(u)
         val d = u.asInstanceOf[Duty]
+        val tasks = d.tasks
         duty.update("participants", MongoDBList(d.participants.map(ui => UserIdents.toMongo(ui)) : _*))
         duty.update("author", UserIdents.toMongo(d.author))
-        duty.update("tasks", MongoDBList(d.tasks.map(t => Tasks.toMongo(t)) : _*))
+        duty.update("tasks", MongoDBList(tasks.map(t => Tasks.toMongo(t)) : _*))
+        
+        //insert task refs too.
+        tasks.foreach( t => {
+          val ref = TaskRefs.fromTask(t, Some(d))
+          db.getCollection(TaskRefs.name).insert(TaskRefs.toMongo(ref))
+        })
+        
         duty
       }
 
@@ -147,9 +163,34 @@ object Mongo {
       def fromMongo(o: DBObject) = UserIdent(username = o.as[String]("username"))
     }
 
-    implicit object TaskRefs extends Collections[TaskRef] {
-      def name = "unpersisted"
-      def fromMongo(o: DBObject): TaskRef = TaskRef(task_id = o.as[String]("task_id"))
+    implicit object TaskRefs extends Collections[TaskRef] with MongoClient {
+      def name = "task_refs"
+
+      def findId(task_id: String): Option[TaskRef] = {
+        val q = MongoDBObject("task_id" -> task_id)
+        val o = Option(db.getCollection(name).findOne(q))
+        o.map(fromMongo)
+      }
+
+      def exists(task_id: String): Boolean = findId(task_id).isDefined
+      
+      override def fromMongo(o: DBObject): TaskRef = TaskRef(task_id = o.as[String]("task_id"))
+      def fromTask(t: Task, d: Option[Duty] = None): TaskRef = 
+        TaskRef(task_id = t.id, duty_id = d.map(_.id))
+    }
+
+    implicit object TaskAddresses extends Collections[TaskAddress] with MongoClient {
+      def name = "task_addresses"
+      def findAddress(a: Address): Option[TaskRef] = {
+        val q = MongoDBObject("btc_address" -> a.toString)
+        val o = Option(db.getCollection(name).findOne(q))
+        val taskAddress = o.map(fromMongo)
+        taskAddress.flatMap(a => TaskRefs.findId(a.task_id))
+      }
+      def fromMongo(o: DBObject) = TaskAddress(
+        task_id = o.as[String]("task_id"), 
+        btc_address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))
+      )
     }
   }
 }

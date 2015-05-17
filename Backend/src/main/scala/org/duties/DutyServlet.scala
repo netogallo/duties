@@ -13,6 +13,9 @@ import Mongo.Collections._
 import Auth._
 import com.mongodb.DBObject
 
+//bitcoinj 
+import org.bitcoinj.core.{Address, Coin, Sha256Hash}
+
 class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/") { home }
   
@@ -23,13 +26,27 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     if (isAuthor) mk[Duty](duty, Duties)
     else mkError("Author must be logged")
   }
-
+  
+  //author must be logged in
+  //every task must exist
   def mkInvite(in: String) = {
     val username = requireAuth
     val invite = read[Invite](in)
     val isAuthor = username.equals(invite.author.username)
-    if (isAuthor) mk[Invite](invite, Invites)
-    else mkError("Author must be logged")
+//    val refs = invite.tasks.map(t => TaskRefs.fromTask(t, Some(d)))
+    val missingRefs: Seq[TaskRef] = invite.tasks.filter(r => !TaskRefs.exists(r.task_id))
+
+    if (missingRefs.nonEmpty) mkError("There is no duty containing this task_id: " +missingRefs.head.task_id)
+    else 
+    if (!isAuthor) mkError("Author must be logged")
+    else {
+      invite.tasks.foreach(t => {
+        val address = TaskAddress(t.task_id, Bithack.mkReceivingAddress)
+        mk[TaskAddress](address, TaskAddresses)
+      })
+      
+      mk[Invite](invite, Invites)
+    }
   }
   // create by forms
   post("/duty/form") {
