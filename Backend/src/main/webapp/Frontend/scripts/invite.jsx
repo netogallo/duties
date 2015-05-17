@@ -60,11 +60,43 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 
 	loadInvites: function(){
 
+	    var self = this;
+	    server.api.invitesReq({type: 'GET'})
+	    .done(function(invites){
+		var taskRefs = []
+		for(var invite in invites){
+		    for(var task in invites[invite].tasks){
+			
+			taskRefs.push(invites[invite].tasks[task]);
+		    }
+		}
+		server.api.toTask({data: taskRefs})
+		.done(function(tasks){
+
+		    for(var invite in invites){
+			for(var task in invites[invite].tasks){
+			    
+			    var task_ = hs.find(
+				function(tsk){
+				    return tsk.id == invites[invite].tasks[task].task_id;
+				},
+				tasks);
+			    if(task_){
+				invites[invite].duty = {id: invites[invite].tasks[task].duty_id};
+				invites[invite].tasks[task] = task_;
+			    }else
+				console.log("Bad Ref",invites[invite].tasks[task]);
+			}
+		    }
+		    self.setState({invites: invites});
+		});
+	    })
 	},
 
 	getInitialState: function(){
 
-	    return {active: this.props.invites.length > 0 ? 0 : undefined}
+	    this.loadInvites();
+	    return {invites: [], active: undefined};
 	},
 
 	selectInvite: function(k,v,e){
@@ -78,7 +110,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		function(x){		    
 		    return (
 			<div className="invite-sel">
-			{x.duty.name}
+			{x.duty.id}
 			</div>
 		    );
 		},

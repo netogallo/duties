@@ -60,6 +60,7 @@ define(["hs"],function(hs){
 	    invite:  hostname + "/invite",
 	    inviteReq: req(hostname + "/invite"),
 	    invites: hostname + "/invites",
+	    mapTasks: hostname + "/tasks",
 	    duties: hostname + "/duties",
 	    dutiesReq: req(hostname + "/duties"),
 	    duty: hostname + "/duty",
