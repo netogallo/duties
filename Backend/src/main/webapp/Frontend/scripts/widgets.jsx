@@ -2,9 +2,16 @@ define(["defs","util","hs"],function(defs,util,hs){
 
     var InviteTask = React.createClass({
 	
+	getInitialState: function(){
+
+	    return {selected: this.props.selected ? true : false};
+	},
+
 	onChange: function(value){
 	    
-	    this.props.task.update({selected: !this.props.task.selected});
+	    this.setState({selected: !this.state.selected});
+	    if(this.props.onChange)
+		this.props.onChange(this.state.selected);
 	},
 
 	render: function(){
@@ -13,7 +20,7 @@ define(["defs","util","hs"],function(defs,util,hs){
 	    return (
 		<div className="task col-md-4">
 		<div className="taskHead">
-		<h3><input onChange={this.onChange} type="checkbox" value={this.props.task.selected}>Test</input></h3>
+		<h3><input onChange={this.onChange} type="checkbox" value={this.state.selected}>Test</input></h3>
 		</div>
 		<div className="taskBody">
 		<div className="taskStatus">

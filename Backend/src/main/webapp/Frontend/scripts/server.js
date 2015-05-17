@@ -55,6 +55,8 @@ define(["hs"],function(hs){
 	    user: hostname + "/user/form",
 	    login: hostname + "/login",
 	    loginReq: loginReq,
+	    invite:  hostname + "/invite",
+	    inviteReq: req(hostname + "/invite"),
 	    invites: hostname + "/invites",
 	    duties: hostname + "/duties",
 	    dutiesReq: req(hostname + "/duties"),

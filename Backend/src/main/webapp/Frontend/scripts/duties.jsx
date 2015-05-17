@@ -216,30 +216,34 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    return {participants: [],tasks: []};
 	},
 
-	toggle: hs.curry(function(self,elem,collection){
+	toggle: hs.curry(function(self,elem,collection,event){
 
-	    var elems = self[collection];
+	    var elems = self.state[collection];
+	    var ns = {};
 
 	    for(var e in elems){
 
 		if(elems[e] == elem){
 		    elems[e] = undefined;
-		    self.setState({participants: self.state.participants});
+		    ns[collection] = elems;
+		    self.setState(ns);
 		    return;
 		}
 	    }
-	    self.state.participants.push(participant);
-	    self.setState({participants: self.state.participants});
+	    elems.push(elem);
+	    ns[collection] = elems;
+	    self.setState(ns);
 
 	}),
 
-	toggleParticipant: function(participant){
-	    
-	    var self = this;
-	    return function(event){
+	onSubmit: function(e){
 
-		
-	    }
+	    e.preventDefault();
+	    if(this.props.onSubmit)
+		this.props.onSubmit({
+		    participants: this.state.participants,
+		    tasks: this.state.tasks
+		});
 	},
 
 	render: function(){
@@ -252,12 +256,13 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    console.log(this.props.duty);
 	    return (
 		<div className={this.props.className} style={{overflow:'auto'}}>
+		<form onSubmit={this.onSubmit}>
 		<h3>Invite Users</h3>
 		<div>
 		{participants.map(function(participant){
 		    return (
 			<span className="label label-info label-participant label-input">
-			<input onChange={self.toggleParticipant(participant.username)} type="checkbox" />
+			<input onChange={self.toggle(self,participant,"participants")} type="checkbox" />
 			{" "+participant.username}
 			</span>);
 		})};
@@ -265,15 +270,42 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<div>
 		{freeTasks.map(function(task){
 		    console.log(task);
-		    return <widgets.InviteTask task={task}/>;
+		    return <widgets.InviteTask onChange={self.toggle(self,task,"tasks")} task={task}/>;
 		})}
 		</div>
+		<input type="submit" className="form-control" value="Send Invites"></input>
+		</form>
 		</div>
 	    );
 	}
     });
 
     var Duty = React.createClass({
+
+	sendInvite: function(spec){
+
+	    console.log("send invite");
+	    console.log(spec);
+	    
+	    for(u in spec.participants){
+		server.api.inviteReq({
+		    data: {
+			author: server.getUser(),
+			advocate: spec.participants[u],
+			tasks: hs.map(function(t){return {task_id: t.id}},spec.tasks)
+		    }})
+		.done(function(res){
+
+		    console.log("good");
+		    console.log(res);
+		})
+		.fail(function(error){
+		    console.log("bad");
+		    console.log(error);
+		});
+	    }
+		    
+	},
 
 	saveDuty: function(e){
 
