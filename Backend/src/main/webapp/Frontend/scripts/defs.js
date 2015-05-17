@@ -1,4 +1,4 @@
-define(["signal"],function(signal){
+define(["signal","hs"],function(signal,hs){
     var Types = signal.Types;
     var Signal = signal.Signal;
 
@@ -26,9 +26,27 @@ define(["signal"],function(signal){
 	unsaved: {type: Types.prim}
     });
 
+    var CheckS = Signal({
+	status: {type: Types.prim},
+	value:  {type: Types.prim},
+    });
+
+    var SuggestS = Signal({
+	selection: {type: Types.prim},
+	suggestions: {type: Types.prim}
+    });
+
     return {
 	InviteTaskS: InviteTaskS,
 	TaskS : TaskS,
-	DutyS : DutyS
+	DutyS : DutyS,
+	CheckS: CheckS,
+	SuggestS: SuggestS,
+	readChecks: function(sigs){
+
+	    return hs.map(
+		function(v){return v.value;},
+		hs.filter(function(v){return v.status;},sigs));
+	}
     };
 });

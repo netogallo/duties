@@ -177,24 +177,51 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
     var DutyEdit = React.createClass({
 
+	getInitialState: function(){
+	    var self = this;
+	    var sig = defs.SuggestS.create({selection: [], suggestions: []});
+	    sig.setUpdate(function(){self.forceUpdate();});
+	    return {sig: sig};
+	},
+
 	createDuty: function(e){
 
 	    e.preventDefault();
 	    if(this.props.onSubmit){
 
 		this.props.onSubmit.apply(this,[{
-		    duty_name: $('input[name="duty-name"]').val()
+		    duty_name: $('input[name="duty-name"]').val(),
+		    participants: hs.map(function(u){return {username: u.username};},this.state.sig.selection)
 		}]);
 	    }
 	},
 
+	//onTextChange: hs.curry(function(self,
+
 	render: function(){
-	    
+	    var self = this;
+	    var onChange = function(query,cb){
+		server.api.getUsers(query,
+		    function(users){
+			cb(hs.map(
+			    function(user){
+				user.str = user.username;
+				return user;
+			    }
+			,hs.filter(
+			    function(user){
+				return query != "" && user.username.contains(query);
+			    },
+			    users)));
+		    });
+	    };
+
 	    return (
 		<div className={this.props.className}>
 		<form onSubmit={this.createDuty}>
 		<label htmlFor="duty-name">Name</label>
 		<input type="text" id="duty-name" className="form-control" name="duty-name"></input>
+		<widgets.Search sig={this.state.sig} onChange={onChange}/>
 		<input type="submit" value="Create Duty"></input>
 		</form>
 		</div>);
@@ -236,41 +263,56 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	}),
 
-	onSubmit: function(e){
+	onSubmit: hs.curry(function(self,participants,tasks,event){
 
-	    e.preventDefault();
-	    if(this.props.onSubmit)
-		this.props.onSubmit({
-		    participants: this.state.participants,
-		    tasks: this.state.tasks
+	    event.preventDefault();
+	    console.log(participants,tasks);
+	    
+	    if(self.props.onSubmit)
+		self.props.onSubmit({
+		    participants: defs.readChecks(participants),
+		    tasks: defs.readChecks(tasks)
 		});
-	},
+	    
+	}),
 
 	render: function(){
 	    var self = this;
 	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
 	    //var boundTasks = tasks[0];
-	    console.log(tasks);
-	    var freeTasks = tasks[1];
-	    var participants = this.props.duty ? this.props.duty.participants : [];
-	    console.log(this.props.duty);
+
+	    var freeTasks = hs.map(function(t){
+		var s = defs.CheckS.create({status: false, value: t});
+		return s;
+	    },
+		tasks[1]);
+
+	    var participants = hs.map(function(ps){
+		//console.log(ps);
+		var s = defs.CheckS.create({status: false, value: ps});
+		return s;
+	    },
+		this.props.duty ? this.props.duty.participants : []);
+
+	    
+		
 	    return (
 		<div className={this.props.className} style={{overflow:'auto'}}>
-		<form onSubmit={this.onSubmit}>
+		<form onSubmit={this.onSubmit(this)(participants)(freeTasks)}>
 		<h3>Invite Users</h3>
 		<div>
 		{participants.map(function(participant){
 		    return (
 			<span className="label label-info label-participant label-input">
-			<input onChange={self.toggle(self,participant,"participants")} type="checkbox" />
-			{" "+participant.username}
+			<input onChange={function(){participant.update({status: !participant.status})}} value={participant.status} type="checkbox" />
+			{" "+participant.value.username}
 			</span>);
 		})};
 		</div>
 		<div>
 		{freeTasks.map(function(task){
 		    console.log(task);
-		    return <widgets.InviteTask onChange={self.toggle(self,task,"tasks")} task={task}/>;
+		    return <widgets.InviteTask task={task}/>;
 		})}
 		</div>
 		<input type="submit" className="form-control" value="Send Invites"></input>
@@ -481,7 +523,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    var self = this;
 	    var duty = {
 		name: dutySpec.duty_name,
-		participants: [],
+		participants: dutySpec.participants,
 		tasks: [],
 		unsaved: true
 	    };

@@ -5,6 +5,8 @@ define(["hs"],function(hs){
 
     var onLogout = [];
 
+    var users = undefined;
+
     var req = hs.curry(function(url,conf){
 
 	if(!conf)
@@ -62,7 +64,23 @@ define(["hs"],function(hs){
 	    dutiesReq: req(hostname + "/duties"),
 	    duty: hostname + "/duty",
 	    dutyReq: req(hostname + "/duty"),
-
+	    getUsers: function(query,cb){
+		console.log("get users");
+		if(users)
+		    cb(users);
+		else{
+		    req(hostname + "/users")({type: 'GET'})
+			.done(function(res){
+			    users = res;
+			    cb(res);
+			})
+			.fail(function(error){
+			    console.log("bad");
+			    console.log(error);
+			});
+		}
+	    }
+	    
 	},
 	getUser: function(){return currUser;},
 
