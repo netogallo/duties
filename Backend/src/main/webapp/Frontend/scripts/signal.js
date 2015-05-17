@@ -51,13 +51,12 @@ define(["hs"],function(hs){
 			},
 
 			update: function(fields){
-
-			    for(field in fields){
-				
+			    console.log("fields",fields);
+			    for(var field in fields){
+				console.log("set",field);
 				this.setProp(field,fields[field]);
 
 			    }
-
 			    this.updateFn ? this.updateFn() : null;
 			},
 

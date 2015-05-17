@@ -8,51 +8,45 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 	    var invite = this.props.invite;
 	    var self = this;
 
+	    /*
 	    for(var task in invite.tasks){
 
 		invite.tasks[task].setUpdate(
 		    function(){
 			console.log("lele");
 			self.setState({x:'y'});});
-	    }
+	    }*/
 	    
 	    return {invite: invite};
 	},
 
 	render: function(){
 
-	    var price = 0;
-
-	    for(var task_ in this.state.invite.tasks){
-		var task = this.state.invite.tasks[task_];
-
-		if(task.selected)
-		    price = price + task.task.penalty;
-	    }
-
-	    return (
-		<div className="invite">
-		<div className="participants">
-		<h4>Participants</h4>
-		{this.state.invite.duty.participants.map(
-		    function(p){
-			return (
-			    <span className="label label-info label-participant">
-			    {p.username}
-			    </span>);
-		    })}
-		</div>
-		<div className="available-tasks">
-		<h4>Available Tasks</h4>
-		<div className="checkbox">
-		{this.state.invite.tasks.map(function(task){
-		  return (<InviteTask task={task} />);
-	         })}
-		{price}
-		</div>
-		</div>
-		</div>
-	    );
+	    if(this.props.invite)
+		return (
+		    <div className="invite">
+		    <div className="participants">
+		    <h4>Participants</h4>
+		    {this.state.invite.duty.participants.map(
+			function(p){
+			    return (
+				<span className="label label-info label-participant">
+				{p.username}
+				</span>);
+			})}
+		    </div>
+		    <div className="available-tasks">
+		    <h4>Available Tasks</h4>
+		    <div className="checkbox">
+		    {this.state.invite.tasks.map(function(task){
+			return (<InviteTask task={task} />);
+	            })}
+		    </div>
+		    </div>
+		    </div>
+		);
+	    else
+		return (<div className="invite"></div>);
 	}
     });
 
@@ -70,7 +64,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			taskRefs.push(invites[invite].tasks[task]);
 		    }
 		}
-		server.api.toTask({data: taskRefs})
+		server.api.mapTasksReq({data: taskRefs})
 		.done(function(tasks){
 
 		    for(var invite in invites){
@@ -88,6 +82,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 				console.log("Bad Ref",invites[invite].tasks[task]);
 			}
 		    }
+		    console.log(invites);
 		    self.setState({invites: invites});
 		});
 	    })
@@ -114,7 +109,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			</div>
 		    );
 		},
-		this.props.invites
+		this.state.invites
 	    );
 
 	    return (
@@ -123,7 +118,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		<widgets.List items={listElems} active={this.state.active} select={this.selectInvite}/>
 		</div>
 		<div className="col-md-8">
-		<Invite invite={this.props.invites[this.state.active]} />
+		<Invite invite={this.state.active ? this.props.invites[this.state.active] : undefined} />
 		</div>
 		</div>);
 	    

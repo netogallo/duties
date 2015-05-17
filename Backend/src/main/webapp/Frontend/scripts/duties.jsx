@@ -282,15 +282,20 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    //var boundTasks = tasks[0];
 
 	    var freeTasks = hs.map(function(t){
-		var s = defs.CheckS.create({status: false, value: t});
-		return s;
+		if(!self.state.tasks[t]){
+		    self.state.tasks[t] = defs.CheckS.create({status: false, value: t});
+		    self.state.tasks[t].setUpdate(function(){self.setState({x:'y'});});
+		}
+		return self.state.tasks[t];
 	    },
 		tasks[1]);
 
 	    var participants = hs.map(function(ps){
-		//console.log(ps);
-		var s = defs.CheckS.create({status: false, value: ps});
-		return s;
+		if(!self.state.participants[ps]){
+		    self.state.participants[ps] = defs.CheckS.create({status: false, value: ps});
+		    self.state.participants[ps].setUpdate(function(){self.setState({x:'y'});});
+		}
+		return self.state.participants[ps];
 	    },
 		this.props.duty ? this.props.duty.participants : []);
 
