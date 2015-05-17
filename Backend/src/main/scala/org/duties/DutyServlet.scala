@@ -62,6 +62,19 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     else write(taskOutput.get)
   } catch renderUnprocessable
 
+  //validates that task_id exists
+  def mkReport(json: String) = try {
+    val rep: Report = read[Report](json)
+    val task: Option[Task] = Tasks.fromRef(rep.task_ref)
+
+    if (!task.isDefined) mkError("This task doesn't exist: " + rep.task_ref.task_id)
+    if (!task.get.is_paid) mkError("This task is not paid or entrusted")
+    //todo: check if state is entrusted
+    //todo: check if reporter is owner
+    else mk[Report](rep, Reports)
+    
+  } catch renderUnprocessable
+
   // create by forms
   post("/duty/form") {
     mkDuty(params("json"))
@@ -111,6 +124,16 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
 
   post("/invite/form"){
     mkInvite(params("json"))
+  }
+    
+  post("/report/form"){
+    val u = requireAuth
+    mk[Report](params("json"), Reports)
+  }
+
+  post("/report"){
+    val u = requireAuth
+    mk[Report](request.body, Reports)
   }
 
   // list

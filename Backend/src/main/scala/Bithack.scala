@@ -12,7 +12,7 @@ import java.net.InetAddress
 object Bithack {
   final val OPERATING_NETWORK = MainNetParams.get
     //TestNet3Params.get
-  final val BLOCKSTORE = new PostgresFullPrunedBlockStore(OPERATING_NETWORK, 1000, "bithack.kmels.net", "bithacks_mainnet", "postgres", "postgres")
+  final val BLOCKSTORE = new PostgresFullPrunedBlockStore(OPERATING_NETWORK, 1000, "localhost", "bithacks_mainnet", "postgres", "postgres")
   final val BLOCKCHAIN = new BlockChain(OPERATING_NETWORK, BLOCKSTORE)
   final val NETWORK: PeerGroup = new PeerGroup(OPERATING_NETWORK, BLOCKCHAIN)
   final val walletFile = new File("bithack_main.wallet")

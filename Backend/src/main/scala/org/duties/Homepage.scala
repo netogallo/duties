@@ -21,13 +21,14 @@ trait Homepage {
     
     val hashedPw = "pw".sha256.hex
     val task = Task(penalty = 1.5d, name = "My task", recurrent = false)
-    val duty = Duty(kmels, Seq(netogallo, kmels), Seq(task))
+    val duty = Duty(kmels, "Our big duty", Seq(netogallo, kmels), Seq(task))
 
     def loggedUser = maybeAuth
     def isLogged = loggedUser.isDefined
     val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
     val ref = TaskRefs.fromTask(task)
     val invite = loggedUser.map(author => Invite(kmels, netogallo, Seq(ref)))
+    val report = Report(kmels, ref)
 
     <html>
       <body>
@@ -80,7 +81,13 @@ trait Homepage {
           <input type='submit' value='Post invite'/>
         </form>
 
-        <h1>GET /address </h1>
+        <h1>POST /report :: JSON -> JSON</h1>
+        <form method="POST" action="/report/form">
+          <textarea name='json' rows='9' cols='45'>{write(report)}</textarea>
+          <input type='submit' value='Post report'/>
+        </form>
+
+        <h1>GET /address :: JSON </h1>
         <form method="GET" action="/address/form">
           <textarea name='json' rows='4' cols='45'>{write(ref)}</textarea>
           <input type='submit' value='Get address'/>

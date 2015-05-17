@@ -105,6 +105,7 @@ object Mongo {
 
         Duty(
           author = UserIdents.fromMongo(o.as[MongoDBObject]("author")),
+          name = o.as[String]("name"),
           participants = ps.map(UserIdents.fromMongo),
           tasks = ts,
           id = o.as[String]("_id")
@@ -218,7 +219,7 @@ object Mongo {
         ta.update("task", TaskRefs.toMongo(t.task_ref))        
         ta
       }
-      def fromMongo(o: DBObject) = {       
+      override def fromMongo(o: DBObject) = {       
         val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))        
         TaskOutput(
           task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
@@ -227,6 +228,16 @@ object Mongo {
         )
       }
     }
+
+    implicit object Reports extends Collections[Report] {
+      override def name = "reports"
+      override def fromMongo(o: DBObject): Report = 
+        Report(
+          reporter = UserIdents.fromMongo(o.as[MongoDBObject]("reporter")),
+          task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task"))
+        )       
+    }
+
   }
 }
 
