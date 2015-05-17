@@ -250,10 +250,17 @@ object Mongo {
 
     implicit object Reports extends Collections[Report] {
       override def name = "reports"
+      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
+        val report = super.toMongo(u)
+        val r = u.asInstanceOf[Report]
+        report.update("reporter", UserIdents.toMongo(r.reporter))
+        report.update("task", TaskRefs.toMongo(r.task))
+        report
+      }
       override def fromMongo(o: DBObject): Report = 
         Report(
           reporter = UserIdents.fromMongo(o.as[MongoDBObject]("reporter")),
-          task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task"))
+          task = TaskRefs.fromMongo(o.as[MongoDBObject]("task"))
         )       
     }
 
