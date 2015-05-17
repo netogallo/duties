@@ -19,12 +19,17 @@ import org.bitcoinj.core.{Address, Coin, Sha256Hash}
 class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/") { home }
   
+  //creates task refs and generates addreses for each user
   def mkDuty(in: String) = {
     val username = requireAuth
     val duty = read[Duty](in)
     val isAuthor = username.equals(duty.author.username)
-    if (isAuthor) mk[Duty](duty, Duties)
-    else mkError("Author must be logged")
+    val missingPpl = duty.participants.filter(p => !Users.existsIdent(p.username))
+    
+    if (missingPpl.nonEmpty) mkError("All participants must exist. There is no username " + missingPpl.head.username)
+    else 
+      if (!isAuthor) mkError("Author must be logged")
+      else mk[Duty](duty, Duties)
   }
   
   //author must be logged in
@@ -39,12 +44,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     if (missingRefs.nonEmpty) mkError("There is no duty containing this task_id: " +missingRefs.head.task_id)
     else 
     if (!isAuthor) mkError("Author must be logged")
-    else {
-      invite.tasks.foreach(t => {
-        val address = TaskAddress(t.task_id, Bithack.mkReceivingAddress)
-        mk[TaskAddress](address, TaskAddresses)
-      })
-      
+    else {      
       mk[Invite](invite, Invites)
     }
   }
@@ -112,5 +112,11 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     val user = requireAuth
     write(Invites.findAdvocate(user))
   }
-  
+
+  get("/me") {
+    maybeAuth match {
+      case None => mkError("Nobody logged.")
+      case Some(u) => write(UserIdent(u))
+    }
+  }
 }

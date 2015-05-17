@@ -26,7 +26,7 @@ object Models {
 
   case class TaskRef(task_id: String, duty_id: Option[String] = None)
   
-  case class TaskAddress(task_id: String, btc_address : Address)
+  case class TaskAddress(task: TaskRef, owner: UserIdent, btc_address : Address)
  
   case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[String] = None, id: String = (new ObjectId().toString()))
 }
