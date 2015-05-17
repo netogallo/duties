@@ -17,20 +17,17 @@ import scala.collection.JavaConversions._
 object Mongo {
   trait Collections[T] {
     def name: String 
-
+    
+    // converts case classes with primitive members
     def toMongo[U](u: U)(implicit utag: TypeTag[U]): MongoDBObject = {
       val clazz = u.getClass()
-      val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList
-       
+      val members: List[MethodSymbol] = typeOf[U].members.collect { case m :MethodSymbol if m.isCaseAccessor => m}.toList       
       val elems: List[(String, AnyRef)] = members.map(m => {
         val member = m.name.toString()
-        val property = if (member == "id") "_id" else member
-        
+        val property = if (member == "id") "_id" else member        
         val value = clazz.getMethod(member).invoke(u)
-
         (property,value)
       })
-
       MongoDBObject(elems)
     }
 
@@ -48,7 +45,7 @@ object Mongo {
         val e = Option(o.as[String]("entrusted"))
         val rs: Seq[String] = o.as[BasicDBList]("reports").toSeq.map(_.asInstanceOf[String])
         val r = o.as[Boolean]("recurrent")
-        val id = o.as[String]("_id")
+        val tid = o.as[String]("_id")
 
         new Task(
           name = n,
@@ -57,7 +54,7 @@ object Mongo {
           entrusted = e,
           reports = rs,
           recurrent = r,
-          task_id = id
+          id = tid
         )
       }
     }
@@ -68,13 +65,9 @@ object Mongo {
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val duty = super.toMongo(u)
         val d = u.asInstanceOf[Duty]
-        val builder = MongoDBList.newBuilder
-        builder ++= d.participants.map(ui => UserIdents.toMongo(ui))
-        duty.update("participants", builder.result)        
+        duty.update("participants", MongoDBList(d.participants.map(ui => UserIdents.toMongo(ui)) : _*))
         duty.update("author", UserIdents.toMongo(d.author))
-        val builder2 = MongoDBList.newBuilder
-        builder2 ++= d.tasks.map(t => Tasks.toMongo(t))
-        duty.update("tasks", builder2.result)
+        duty.update("tasks", MongoDBList(d.tasks.map(t => Tasks.toMongo(t)) : _*))
         duty
       }
 
@@ -133,14 +126,9 @@ object Mongo {
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val invite = super.toMongo(u)
         val i = u.asInstanceOf[Invite]
-
         invite.update("author", UserIdents.toMongo(i.author))
         invite.update("advocate", UserIdents.toMongo(i.advocate))
-
-        val builder = MongoDBList.newBuilder
-        builder ++= i.tasks.map(t => TaskRefs.toMongo(t))
-        invite.update("tasks", builder.result)
-        
+        invite.update("tasks", MongoDBList(i.tasks.map(t => TaskRefs.toMongo(t)) : _*))      
         invite
       }
       
