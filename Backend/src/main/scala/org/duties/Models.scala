@@ -32,7 +32,7 @@ object Models {
   case class TaskReward(tx_hash: String, taskOutput: TaskOutput, value: Double)
  
   case class Report(reporter: UserIdent, task_ref: TaskRef)
-  case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[String] = None, id: String = (new ObjectId().toString()))
+  case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[Duty] = None, id: String = (new ObjectId().toString()))
 }
 
 object Auth {         

@@ -43,16 +43,11 @@ object Mongo {
       def fromRef(r: TaskRef): Option[Task] = {
         println("FROMREF: "+ r.task_id)
         val q = "tasks" $elemMatch MongoDBObject("_id" -> r.task_id)
-          //MongoDBObject("tasks" -> MongoDBObject("task_id" -> r.1task_id))
-
-//        val elemMatch = "records" $elemMatch MongoDBObject("n" -> "Name", "v" -> "Will")
-
         val o = Option(db.getCollection(Duties.name).findOne(q))
         val d: Option[Duty] = o.map(Duties.fromMongo)
         val tasks: Option[Seq[Task]] = d.map(duty => duty.tasks)
         val t = tasks.flatMap(t => t.find(task => task.id == r.task_id))
         t
-//        t.map(task => Tasks.fromMongo)
       }
 
       override def fromMongo(o: DBObject): Task = {
@@ -79,6 +74,12 @@ object Mongo {
     object Duties extends Collections[Duty] with MongoClient { 
       override def name = "duties" 
       
+      def find(duty_id: String): Option[Duty] = {
+        val q = MongoDBObject("_id" -> duty_id)
+        val o = Option(db.getCollection(name).findOne(q))
+        o.map(fromMongo)
+      }
+
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val duty = super.toMongo(u)
         val d = u.asInstanceOf[Duty]
@@ -172,11 +173,20 @@ object Mongo {
       }
       
       override def fromMongo(o: DBObject) = {
+        val trefs: Seq[TaskRef] = o.as[BasicDBList]("tasks").toSeq.map(t => TaskRefs.fromMongo(t.asInstanceOf[DBObject]))
+        
+        val duty_id: Option[String] = trefs.headOption.flatMap(taskRef => {
+          val ref: Option[TaskRef] = TaskRefs.find(taskRef.task_id)
+          ref.flatMap(_.duty_id)
+        })
+
+        val d: Option[Duty] = duty_id.flatMap(Duties.find)
+
         Invite(
           author = UserIdents.fromMongo(o.as[DBObject]("author")),
           advocate = UserIdents.fromMongo(o.as[DBObject]("advocate")),
-          tasks = o.as[BasicDBList]("tasks").toSeq.map(t => TaskRefs.fromMongo(t.asInstanceOf[DBObject])),
-          duty = Option(o.as[String]("duty")),
+          tasks = trefs,
+          duty = d,
           id = o.as[String]("_id")
         )
       }
