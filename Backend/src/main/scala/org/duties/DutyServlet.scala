@@ -92,7 +92,8 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
 
   get("/invites") {
-    //find(Invites(user))
+    val user = requireAuth
+    write(Invites.findAdvocate(user))
   }
   
 }
