@@ -32,7 +32,7 @@ object Bithack {
     NETWORK.start()
     new Thread(new Runnable {
       def run() {
-        NETWORK.downloadBlockChain()
+        //NETWORK.downloadBlockChain()
       }
     }).start
   }

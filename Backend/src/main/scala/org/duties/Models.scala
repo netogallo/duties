@@ -16,7 +16,7 @@ import javax.xml.bind.DatatypeConverter
 import org.bitcoinj.core.{Address, Sha256Hash}
 
 object Models {
-  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reports: Seq[String] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
+  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reported_by: Seq[UserIdent] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
     def is_paid = entrusted.isDefined
   }
 
