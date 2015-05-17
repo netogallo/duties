@@ -65,9 +65,9 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   //validates that task_id exists
   def mkReport(json: String) = try {
     val rep: Report = read[Report](json)
-    val task: Option[Task] = Tasks.fromRef(rep.task_ref)
+    val task: Option[Task] = Tasks.fromRef(rep.task)
 
-    if (!task.isDefined) mkError("This task doesn't exist: " + rep.task_ref.task_id)
+    if (!task.isDefined) mkError("This task doesn't exist: " + rep.task.task_id)
     if (!task.get.is_paid) mkError("This task is not paid or entrusted")
     //todo: check if state is entrusted
     //todo: check if reporter is owner
