@@ -25,8 +25,9 @@ object Models {
   case class UserIdent(username: String)
 
   case class TaskRef(task_id: String, duty_id: Option[String] = None)  
-  case class TaskOutput(task: TaskRef, owner: UserIdent, btc_address : String)
-  case class TaskPayment(tx_hash: Sha256Hash, address: TaskOutput)
+  case class TaskOutput(task_ref: TaskRef, owner: UserIdent, btc_address : String)
+  case class TaskPayment(tx_hash: String, taskOutput: TaskOutput, value: Double)
+  case class TaskReward(tx_hash: String, taskOutput: TaskOutput, value: Double)
  
   case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[String] = None, id: String = (new ObjectId().toString()))
 }

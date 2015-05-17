@@ -199,11 +199,10 @@ object Mongo {
 
     implicit object TaskOutputs extends Collections[TaskOutput] with MongoClient {
       def name = "task_outputs"
-      def findAddress(adr: Address): Option[TaskRef] = {
+      def findAddress(adr: Address): Option[TaskOutput] = {
         val q = MongoDBObject("btc_address" -> adr.toString)
         val o = Option(db.getCollection(name).findOne(q))
-        val taskAddress = o.map(fromMongo)
-        taskAddress.flatMap(a => TaskRefs.find(a.task.task_id))
+        o.map(fromMongo)
       }
       def findOutput(ref: TaskRef, uid: UserIdent): Option[TaskOutput] = {
         val q = MongoDBObject("owner" -> UserIdents.toMongo(uid), "task" -> TaskRefs.toMongo(ref))
@@ -216,13 +215,13 @@ object Mongo {
         val t = u.asInstanceOf[TaskOutput]
         ta.update("btc_address", t.btc_address.toString)
         ta.update("owner", UserIdents.toMongo(t.owner))        
-        ta.update("task", TaskRefs.toMongo(t.task))        
+        ta.update("task", TaskRefs.toMongo(t.task_ref))        
         ta
       }
       def fromMongo(o: DBObject) = {       
         val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))        
         TaskOutput(
-          task = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
+          task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
           owner = UserIdents.fromMongo(o.as[MongoDBObject]("owner")),
           btc_address = address.toString
         )
