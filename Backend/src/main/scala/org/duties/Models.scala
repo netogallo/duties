@@ -16,9 +16,11 @@ import javax.xml.bind.DatatypeConverter
 import org.bitcoinj.core.{Address, Sha256Hash}
 
 object Models {
-  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reports: Seq[String] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString()))
+  case class Task(name: String, description: Option[String] = None, penalty: Double, entrusted: Option[String] = None, reports: Seq[String] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
+    def is_paid = entrusted.isDefined
+  }
 
-  case class Duty(author: UserIdent, participants: Seq[UserIdent], tasks: Seq[Task], id: String = (new ObjectId().toString()))
+  case class Duty(author: UserIdent, name: String, participants: Seq[UserIdent], tasks: Seq[Task], id: String = (new ObjectId().toString()))
   
   case class User(username: String, password: String, id: String = (new ObjectId().toString()))
 
@@ -29,6 +31,7 @@ object Models {
   case class TaskPayment(tx_hash: String, taskOutput: TaskOutput, value: Double)
   case class TaskReward(tx_hash: String, taskOutput: TaskOutput, value: Double)
  
+  case class Report(reporter: UserIdent, task_ref: TaskRef)
   case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[String] = None, id: String = (new ObjectId().toString()))
 }
 

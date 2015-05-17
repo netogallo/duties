@@ -41,9 +41,18 @@ object Mongo {
       override def name = "tasks"
         
       def fromRef(r: TaskRef): Option[Task] = {
-        val q = MongoDBObject("task_id" -> r.task_id)
-        val o = Option(db.getCollection(name).findOne(q))
-        o.map(fromMongo)
+        println("FROMREF: "+ r.task_id)
+        val q = "tasks" $elemMatch MongoDBObject("_id" -> r.task_id)
+          //MongoDBObject("tasks" -> MongoDBObject("task_id" -> r.1task_id))
+
+//        val elemMatch = "records" $elemMatch MongoDBObject("n" -> "Name", "v" -> "Will")
+
+        val o = Option(db.getCollection(Duties.name).findOne(q))
+        val d: Option[Duty] = o.map(Duties.fromMongo)
+        val tasks: Option[Seq[Task]] = d.map(duty => duty.tasks)
+        val t = tasks.flatMap(t => t.find(task => task.id == r.task_id))
+        t
+//        t.map(task => Tasks.fromMongo)
       }
 
       override def fromMongo(o: DBObject): Task = {
@@ -105,6 +114,7 @@ object Mongo {
 
         Duty(
           author = UserIdents.fromMongo(o.as[MongoDBObject]("author")),
+          name = o.as[String]("name"),
           participants = ps.map(UserIdents.fromMongo),
           tasks = ts,
           id = o.as[String]("_id")
@@ -218,7 +228,7 @@ object Mongo {
         ta.update("task", TaskRefs.toMongo(t.task_ref))        
         ta
       }
-      def fromMongo(o: DBObject) = {       
+      override def fromMongo(o: DBObject) = {       
         val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))        
         TaskOutput(
           task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
@@ -227,6 +237,16 @@ object Mongo {
         )
       }
     }
+
+    implicit object Reports extends Collections[Report] {
+      override def name = "reports"
+      override def fromMongo(o: DBObject): Report = 
+        Report(
+          reporter = UserIdents.fromMongo(o.as[MongoDBObject]("reporter")),
+          task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task"))
+        )       
+    }
+
   }
 }
 
