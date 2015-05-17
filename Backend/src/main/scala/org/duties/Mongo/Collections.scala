@@ -41,7 +41,6 @@ object Mongo {
       override def name = "tasks"
         
       def fromRef(r: TaskRef): Option[Task] = {
-        println("FROMREF: "+ r.task_id)
         val q = "tasks" $elemMatch MongoDBObject("_id" -> r.task_id)
         val o = Option(db.getCollection(Duties.name).findOne(q))
         val d: Option[Duty] = o.map(Duties.fromMongo)
@@ -265,9 +264,7 @@ object Mongo {
     implicit object Reports extends Collections[Report] with MongoClient {
       override def name = "reports"
       def findReports(taskRef: TaskRef): Seq[Report] = {
-        val q = MongoDBObject("task" -> TaskRefs.toMongo(taskRef))
-        
-        println("Looking for reports ON TASK " + taskRef)
+        val q = MongoDBObject("task" -> TaskRefs.toMongo(taskRef))        
         db.getCollection(name).find(q).toArray().map(fromMongo)        
       }
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
