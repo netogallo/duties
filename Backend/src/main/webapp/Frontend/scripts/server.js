@@ -7,9 +7,10 @@ define(function(){
 	    
 	    host: hostname,
 	    user: hostname + "/user/form",
-	    login: hostname + "/auth",
+	    login: hostname + "/login",
 	    invites: hostname + "/invites",
-	    duties: hostname + "/duties"
+	    duties: hostname + "/duties",
+	    duty: hostname + "/duty"
 
 	},
 

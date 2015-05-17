@@ -177,7 +177,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 
     var DutyEdit = React.createClass({
 
-	saveDuty: function(e){
+	createDuty: function(e){
 
 	    e.preventDefault();
 	    if(this.props.onSubmit){
@@ -192,7 +192,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	    
 	    return (
 		<div className={this.props.className}>
-		<form onSubmit={this.saveDuty}>
+		<form onSubmit={this.createDuty}>
 		<label htmlFor="duty-name">Name</label>
 		<input type="text" id="duty-name" className="form-control" name="duty-name"></input>
 		<input type="submit" value="Create Duty"></input>
@@ -202,6 +202,24 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
     });
 
     var Duty = React.createClass({
+
+	saveDuty: function(e){
+
+	    var duty = this.props.duty.restore();
+	    duty.unsaved = undefined;
+	    $.post(
+		server.api.duty,
+		JSON.stringify(duty))
+	    .done(function(data){
+		console.log("good");
+		console.log(data);
+	    })
+	    .fail(function(data){
+		console.log("fail");
+		console.log(data);
+	    });
+		
+	},
 	
 	render: function(){
 	    var self = this;
@@ -260,7 +278,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 		    <div className="taskOperations">
 		    {dialog}
 		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Create Task</button>
-		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Save Duty</button>
+		    <button type="button" onClick={this.saveDuty} className="btn btn-primary btn-sm">Save Duty</button>
 		    </div>);
 	    else
 		operations = (

@@ -4,12 +4,15 @@ define(["server"],function(server){
 	login: function(e){
 
 	    e.preventDefault();
-	    $.post(
+	    $.ajax(
 		server.api.login,
-		JSON.stringify({
-		    username: $('input[name="email-login"]').val(),
-		    password: $('input[name="password-login"]').val()
-		}))
+		{
+		    type: 'POST',
+		    contentType: 'application/json',
+		    data: JSON.stringify({
+			username: $('input[name="email-login"]').val(),
+			password: $('input[name="password-login"]').val()
+		    })})
 	    .done(
 		function(data){
 		    console.log("good");
