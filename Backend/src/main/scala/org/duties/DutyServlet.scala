@@ -48,6 +48,20 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
       mk[Invite](invite, Invites)
     }
   }
+  
+  def taskAddress(json: String, username: String): String = try {    
+    val ref = read[TaskRef](json)
+    val task_id = ref.task_id
+    val duty_id = ref.duty_id
+    val taskRef: Option[TaskRef] = TaskRefs.find(task_id)
+    val taskAddress = taskRef.map(ref => TaskAddresses.findTask(ref, UserIdent(username)))
+
+    if (!taskRef.isDefined) mkError("This task isn't referenced: " + ref.task_id)
+    else
+    if (!taskAddress.isDefined) mkError("Something's odd, task exists but cannot find address for username " +username)
+    else write(taskAddress.get)
+  } catch renderUnprocessable
+
   // create by forms
   post("/duty/form") {
     mkDuty(params("json"))
@@ -118,5 +132,15 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
       case None => mkError("Nobody logged.")
       case Some(u) => write(UserIdent(u))
     }
+  }
+  
+  get("/address/form") { 
+    val u = requireAuth
+    taskAddress(params("json"), u) 
+  }
+
+  get("/address"){ 
+    val u = requireAuth
+    taskAddress(request.body, u) 
   }
 }

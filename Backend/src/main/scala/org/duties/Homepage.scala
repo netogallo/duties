@@ -25,10 +25,9 @@ trait Homepage {
 
     def loggedUser = maybeAuth
     def isLogged = loggedUser.isDefined
-
     val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
-
-    val invite = loggedUser.map(author => Invite(UserIdent(author), netogallo, Seq(TaskRef("a task id"))))
+    val ref = TaskRefs.fromTask(task)
+    val invite = loggedUser.map(author => Invite(kmels, netogallo, Seq(ref)))
 
     <html>
       <body>
@@ -81,6 +80,12 @@ trait Homepage {
           <input type='submit' value='Post invite'/>
         </form>
 
+        <h1>GET /address </h1>
+        <form method="GET" action="/address/form">
+          <textarea name='json' rows='4' cols='45'>{write(ref)}</textarea>
+          <input type='submit' value='Get address'/>
+        </form>
+
         <h1>GET /captcha :: () -> Image</h1>
         <img src="/captcha"/>
     
@@ -88,7 +93,7 @@ trait Homepage {
         <form method="POST" action="/captcha">
           <textarea name='text' rows='4' cols='45'>{captcha.getAnswer}</textarea>
           <input type='submit' value='Validate'/>
-        </form>                
+        </form>   
       </body>
     </html>
   }

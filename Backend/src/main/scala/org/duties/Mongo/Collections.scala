@@ -179,27 +179,38 @@ object Mongo {
     implicit object TaskRefs extends Collections[TaskRef] with MongoClient {
       def name = "task_refs"
 
-      def findId(task_id: String): Option[TaskRef] = {
+      def find(task_id: String): Option[TaskRef] = {
         val q = MongoDBObject("task_id" -> task_id)
         val o = Option(db.getCollection(name).findOne(q))
         o.map(fromMongo)
       }
 
-      def exists(task_id: String): Boolean = findId(task_id).isDefined
+      def exists(task_id: String): Boolean = find(task_id).isDefined
       
-      override def fromMongo(o: DBObject): TaskRef = TaskRef(task_id = o.as[String]("task_id"))
+      override def fromMongo(o: DBObject): TaskRef = TaskRef(
+        task_id = o.as[String]("task_id"),
+        duty_id = Option(o.as[String]("duty_id"))
+      )
+
       def fromTask(t: Task, d: Option[Duty] = None): TaskRef = 
         TaskRef(task_id = t.id, duty_id = d.map(_.id))
     }
 
     implicit object TaskAddresses extends Collections[TaskAddress] with MongoClient {
       def name = "task_addresses"
-      def findAddress(a: Address): Option[TaskRef] = {
-        val q = MongoDBObject("btc_address" -> a.toString)
+      def findAddress(adr: Address): Option[TaskRef] = {
+        val q = MongoDBObject("btc_address" -> adr.toString)
         val o = Option(db.getCollection(name).findOne(q))
         val taskAddress = o.map(fromMongo)
-        taskAddress.flatMap(a => TaskRefs.findId(a.task.task_id))
+        taskAddress.flatMap(a => TaskRefs.find(a.task.task_id))
       }
+      def findTask(ref: TaskRef, uid: UserIdent): Option[TaskAddress] = {
+        val q = MongoDBObject("owner" -> UserIdents.toMongo(uid), "task" -> TaskRefs.toMongo(ref))
+        println("QQQ" + q)
+        val o = Option(db.getCollection(name).findOne(q))
+        o.map(fromMongo)
+      }
+
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val ta = super.toMongo(u)
         val t = u.asInstanceOf[TaskAddress]
