@@ -86,11 +86,11 @@ object Mongo {
           ref 
         })
         
-        //generate task addresses too
-        val addresses: Seq[Seq[TaskAddress]] = refs.map(ref => {
+        //generate task outputs too
+        val outputs: Seq[Seq[TaskOutput]] = refs.map(ref => {
           members.map(m => {
-            val address = TaskAddress(ref, m, Bithack.mkReceivingAddress)
-            db.getCollection(TaskAddresses.name).insert(TaskAddresses.toMongo(address))
+            val address = TaskOutput(ref, m, Bithack.mkReceivingAddress.toString)
+            db.getCollection(TaskOutputs.name).insert(TaskOutputs.toMongo(address))
             address
           })
         })
@@ -166,7 +166,8 @@ object Mongo {
           author = UserIdents.fromMongo(o.as[DBObject]("author")),
           advocate = UserIdents.fromMongo(o.as[DBObject]("advocate")),
           tasks = o.as[BasicDBList]("tasks").toSeq.map(t => TaskRefs.fromMongo(t.asInstanceOf[DBObject])),
-          duty = Option(o.as[String]("duty"))
+          duty = Option(o.as[String]("duty")),
+          id = o.as[String]("_id")
         )
       }
     }
@@ -179,40 +180,52 @@ object Mongo {
     implicit object TaskRefs extends Collections[TaskRef] with MongoClient {
       def name = "task_refs"
 
-      def findId(task_id: String): Option[TaskRef] = {
+      def find(task_id: String): Option[TaskRef] = {
         val q = MongoDBObject("task_id" -> task_id)
         val o = Option(db.getCollection(name).findOne(q))
         o.map(fromMongo)
       }
 
-      def exists(task_id: String): Boolean = findId(task_id).isDefined
+      def exists(task_id: String): Boolean = find(task_id).isDefined
       
-      override def fromMongo(o: DBObject): TaskRef = TaskRef(task_id = o.as[String]("task_id"))
+      override def fromMongo(o: DBObject): TaskRef = TaskRef(
+        task_id = o.as[String]("task_id"),
+        duty_id = Option(o.as[String]("duty_id"))
+      )
+
       def fromTask(t: Task, d: Option[Duty] = None): TaskRef = 
         TaskRef(task_id = t.id, duty_id = d.map(_.id))
     }
 
-    implicit object TaskAddresses extends Collections[TaskAddress] with MongoClient {
-      def name = "task_addresses"
-      def findAddress(a: Address): Option[TaskRef] = {
-        val q = MongoDBObject("btc_address" -> a.toString)
+    implicit object TaskOutputs extends Collections[TaskOutput] with MongoClient {
+      def name = "task_outputs"
+      def findAddress(adr: Address): Option[TaskOutput] = {
+        val q = MongoDBObject("btc_address" -> adr.toString)
         val o = Option(db.getCollection(name).findOne(q))
-        val taskAddress = o.map(fromMongo)
-        taskAddress.flatMap(a => TaskRefs.findId(a.task.task_id))
+        o.map(fromMongo)
       }
+      def findOutput(ref: TaskRef, uid: UserIdent): Option[TaskOutput] = {
+        val q = MongoDBObject("owner" -> UserIdents.toMongo(uid), "task" -> TaskRefs.toMongo(ref))
+        val o = Option(db.getCollection(name).findOne(q))
+        o.map(fromMongo)
+      }
+
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val ta = super.toMongo(u)
-        val t = u.asInstanceOf[TaskAddress]
+        val t = u.asInstanceOf[TaskOutput]
         ta.update("btc_address", t.btc_address.toString)
         ta.update("owner", UserIdents.toMongo(t.owner))        
-        ta.update("task", TaskRefs.toMongo(t.task))        
+        ta.update("task", TaskRefs.toMongo(t.task_ref))        
         ta
       }
-      def fromMongo(o: DBObject) = TaskAddress(
-        task = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
-        owner = UserIdents.fromMongo(o.as[MongoDBObject]("owner")),
-        btc_address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))
-      )
+      def fromMongo(o: DBObject) = {       
+        val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))        
+        TaskOutput(
+          task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
+          owner = UserIdents.fromMongo(o.as[MongoDBObject]("owner")),
+          btc_address = address.toString
+        )
+      }
     }
   }
 }

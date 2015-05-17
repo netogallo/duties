@@ -35,7 +35,19 @@
 		"type": "number",
 		"description": "The penalty the person must pay if the taks is not completed"
 	    },
-
+        "total_bounty": {
+        "type": "number",
+        "description": "The number of coins deposited, either from entrusted person or as a reward. The sum of all payment values"
+        },
+        "payments": {
+        "type": "array",
+        "description": "Payments made by participants"
+        "items": {
+            "type": "object", "properties": { 
+            "username": {"type": "string"},
+            "value": {"type": "number"}
+        }
+        }
 	    "entrusted": {
 		"type": "string",
 		"description": "The person that is responsible for performing this duty. Absence of the field indicates no persion is yet assigned to the task"
@@ -60,7 +72,8 @@
 			"oneOf": [
 			    "free",
 			    "entrusted",
-			    "expired"
+			    "expired",
+                "almost_entrusted"
 			]
 		    },
 		    "entrust_start": {
@@ -68,7 +81,7 @@
 			"format": "date-time",
 			"description": "Datetime as 'DD/MM/YY:HH:MM'. May be absent if status is not entrusted"
 		    }
-		},
+		}
 		"required": ["status"]
 	    }	
 	},
@@ -86,7 +99,8 @@
 	    },
 
 	    "author": {
-		"type": "string",
+		"type": "object",
+        "properties": { "username": { "type": "string" } },
 		"description": "The username of the user that created the duty."
 	    },
 
