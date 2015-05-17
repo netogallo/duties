@@ -12,7 +12,8 @@ define(["signal"],function(signal){
 	entrusted: {type: Types.prim},
 	description: {type: Types.prim},
 	penalty: {type: Types.prim},
-	votes: {type: Types.prim}
+	reports: {type: Types.prim},
+	recurrent: {type: Types.prim}
     });
 
     var DutyS = Signal({

@@ -40,7 +40,7 @@ define(["hs"],function(hs){
 
 				else if(type.type == signalT)
 				    res[prop] = this[prop].restore();
-				else if(type.type && type.type.type == arrayT && type.type.of.type == signalT){
+				else if(type.type && type.type == arrayT && type.of.type == signalT){
 				    res[prop] = hs.map(function(v){return v.restore()},this[prop]);
 				}
 			    }
@@ -70,7 +70,7 @@ define(["hs"],function(hs){
 			    var self = this;
 
 			    if(!type)
-				throw ("The property " + prop + " is not defined in spec: " + JSON.stringyfy(spec));
+				throw ("The property " + prop + " is not defined in spec: " + JSON.stringify(spec));
 
 			    this[prop] = value;
 

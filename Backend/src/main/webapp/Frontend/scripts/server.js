@@ -1,6 +1,10 @@
 define(["hs"],function(hs){
     var hostname = "";//"http://localhost:8080"
 
+    var onLogin = [];
+
+    var onLogout = [];
+
     var req = hs.curry(function(url,conf){
 
 	if(!conf.contentType)
@@ -15,6 +19,28 @@ define(["hs"],function(hs){
 	return $.ajax(url,conf);
     });
 
+    var currUser;
+
+    var loginReq = function(conf){
+
+	var data = conf.data;
+	return req(hostname + "/login",conf)
+	    .done(function(cookie){
+		currUser = data;
+		currUser.password = undefined;
+		for(cb in onLogin){
+		    onLogin[cb](currUser,cookie);
+		}
+	    })
+	    .fail(function(error){
+
+		for(cb in onLogin){
+		    conf.data.error = true;
+		    onLogin[cb](data,error);
+		}
+	    });
+    };
+
     return {
 
 	api: {
@@ -22,11 +48,22 @@ define(["hs"],function(hs){
 	    host: hostname,
 	    user: hostname + "/user/form",
 	    login: hostname + "/login",
-	    loginReq: req(hostname + "/login"),
+	    loginReq: loginReq,
 	    invites: hostname + "/invites",
 	    duties: hostname + "/duties",
-	    duty: hostname + "/duty"
+	    duty: hostname + "/duty",
+	    dutyReq: req(hostname + "/duty"),
 
+	},
+	getUser: function(){return currUser;},
+
+	onLogin: function(cb){
+
+	    onLogin.push(cb);
+	},
+
+	onLogout: function(cb){
+	    onLogout.push(cb);
 	},
 
 	getDuties: function(){
