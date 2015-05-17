@@ -2,8 +2,16 @@ define(function(){
 
     var hs = prelude('prelude-ls');
 
-    return {
+    var if_ = hs.curry(function(cond,yes,no){
 
+	if(cond)
+	    return yes;
+	else
+	    return no;
+    });
+
+    return {
+	if_ : if_,
 	mapi: hs.curry(
 	    function(f,xs){
 		var xs_;

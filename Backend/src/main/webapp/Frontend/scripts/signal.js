@@ -1,4 +1,4 @@
-define(function(){
+define(["hs"],function(hs){
 
     var prim = {type: 'prim'};
 
@@ -27,6 +27,26 @@ define(function(){
 		create: function(obj){
 
 		    var res = {
+
+			restore: function(){
+			    
+			    var res = {};
+			    for(var prop in spec){
+
+				var type = spec[prop].type;
+
+				if(type == prim)
+				    res[prop] = this[prop];
+
+				else if(type.type == signalT)
+				    res[prop] = this[prop].restore();
+				else if(type.type && type.type.type == arrayT && type.type.of.type == signalT){
+				    res[prop] = hs.map(function(v){return v.restore()},this[prop]);
+				}
+			    }
+
+			    return res;
+			},
 
 			update: function(fields){
 
