@@ -30,7 +30,11 @@ object Bithack {
     NETWORK.addAddress(new PeerAddress(InetAddress.getLocalHost()))
     NETWORK.addPeerDiscovery(new DnsDiscovery(OPERATING_NETWORK))
     NETWORK.start()
-    NETWORK.downloadBlockChain()
+    new Thread(new Runnable {
+      def run() {
+        NETWORK.downloadBlockChain()
+      }
+    }).start
   }
 
   // Adds a wallet to the network

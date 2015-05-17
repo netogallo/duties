@@ -1,4 +1,4 @@
-requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,util){
+requirejs(["server","signal","defs","ui","util","widgets"],function(server,signal,defs,ui,util,widgets){
     
     
     console.log("what");
@@ -64,7 +64,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 		    
 		    task_name: $('input[name="task-name"]').val(),
 		    task_description: $('input[name="task-description"]').val(),
-		    task_penalty: $('input[name="task-penalty"]').val()
+		    task_penalty: parseInt($('input[name="task-penalty"]').val())
 		}]);
 	    }
 	},
@@ -113,20 +113,20 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	    return hs.find(
 		function(username){
 		    return username == server.getLoggedUser().username;}
-		,this.props.task.votes);
+		,this.props.task.reports);
 	},
 
 	handleReport: function(e){
 	    
-	    var votes;
+	    var reports;
 	    var self = this;
 	    var logged = server.getLoggedUser();
 	    if(this.isReported())
-		votes = hs.filter(function(user){return user != logged.username},this.props.task.votes);
+		reports = hs.filter(function(user){return user != logged.username},this.props.task.votes);
 	    else
-		votes = hs.concat([[logged.username],this.props.task.votes]);
+		reports = hs.concat([[logged.username],this.props.task.reports]);
 	    
-	    this.props.task.update({votes: votes});
+	    this.props.task.update({reports: reports});
 	},
 	
 	render: function(){
@@ -135,7 +135,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 
 	    var reportBtnCss = ["label"];
 
-	    if(this.props.total && this.props.total / 2 <= this.props.task.votes.length)
+	    if(this.props.total && this.props.total / 2 <= this.props.task.reports.length)
 		reportBtnCss.push("label-warning");
 	    else
 		reportBtnCss.push("label-success");
@@ -157,7 +157,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 		    </div>
 		    <div className="taskBody taskEmptyBody">
 		    <div className="taskStatus">
-		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.votes.length}</span></span>
+		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.reports.length}</span></span>
 		    &nbsp;
 		    <span className="label label-info">{this.props.task.entrusted}</span>
 		    &nbsp;
@@ -201,15 +201,86 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	}
     });
 
+    var splitTasks = function(tasks){
+
+	return hs.partition(
+	    function(t){return t.entrusted;},
+	    tasks);
+
+	
+    }
+
+    var DutyInvite = React.createClass({
+	getInitialState: function(){
+
+	    return {participants: [],tasks: []};
+	},
+
+	toggle: hs.curry(function(self,elem,collection){
+
+	    var elems = self[collection];
+
+	    for(var e in elems){
+
+		if(elems[e] == elem){
+		    elems[e] = undefined;
+		    self.setState({participants: self.state.participants});
+		    return;
+		}
+	    }
+	    self.state.participants.push(participant);
+	    self.setState({participants: self.state.participants});
+
+	}),
+
+	toggleParticipant: function(participant){
+	    
+	    var self = this;
+	    return function(event){
+
+		
+	    }
+	},
+
+	render: function(){
+	    var self = this;
+	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
+	    //var boundTasks = tasks[0];
+	    console.log(tasks);
+	    var freeTasks = tasks[1];
+	    var participants = this.props.duty ? this.props.duty.participants : [];
+	    console.log(this.props.duty);
+	    return (
+		<div className={this.props.className} style={{overflow:'auto'}}>
+		<h3>Invite Users</h3>
+		<div>
+		{participants.map(function(participant){
+		    return (
+			<span className="label label-info label-participant label-input">
+			<input onChange={self.toggleParticipant(participant.username)} type="checkbox" />
+			{" "+participant.username}
+			</span>);
+		})};
+		</div>
+		<div>
+		{freeTasks.map(function(task){
+		    console.log(task);
+		    return <widgets.InviteTask task={task}/>;
+		})}
+		</div>
+		</div>
+	    );
+	}
+    });
+
     var Duty = React.createClass({
 
 	saveDuty: function(e){
 
 	    var duty = this.props.duty.restore();
+	    duty.author = server.getUser();
 	    duty.unsaved = undefined;
-	    $.post(
-		server.api.duty,
-		JSON.stringify(duty))
+	    server.api.dutyReq({data: duty})
 	    .done(function(data){
 		console.log("good");
 		console.log(data);
@@ -224,26 +295,23 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	render: function(){
 	    var self = this;
 
-	    var votes = {};
+	    var reports = {};
 	    var penalty = {};
 
-	    var tasks = hs.partition(
-		function(t){return t.entrusted;},
-		this.props.duty ? this.props.duty.tasks : []);
-
+	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
 	    var boundTasks = tasks[0];
 	    var freeTasks = tasks[1];
 
 	    hs.map(
 		function(task){
-		    votes[task.task_id] = task.votes;
+		    reports[task.task_id] = task.reports;
 		},
 		this.props.duty ? this.props.duty.tasks : []);
 
 	    hs.map(
 		function(user){		
 		    var loss = hs.fold(function(s,task){
-			if(task.entrusted == user.username && self.props.duty.participants.length / 2 <= votes[task.task_id].length)
+			if(task.entrusted == user.username && self.props.duty.participants.length / 2 <= reports[task.task_id].length)
 			    return s - task.penalty;
 			else
 			    return s;
@@ -257,10 +325,11 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 		
 		var task = defs.TaskS.create({
 		    name: taskProps.task_name,
-		    entrusted: "",
+		    //entrusted: "",
 		    description: taskProps.task_description,
 		    penalty: taskProps.task_penalty,
-		    votes: []
+		    recurrent: false,
+		    reports: []
 		});
 
 		self.props.duty.update({tasks: hs.concat([[task],self.props.duty.tasks])});
@@ -269,6 +338,11 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	    var dialog = (
 		<Dialog id="task-edit">
 		<TaskEdit onSubmit={taskSave} className="modal-body"/>
+		</Dialog>);
+
+	    var invite = (
+		<Dialog id="duty-invite">
+		<DutyInvite duty={this.props.duty} onSubmit={this.sendInvite} className="modal-body"/>
 		</Dialog>);
 
 	    var operations;
@@ -283,8 +357,8 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	    else
 		operations = (
 		    <div className="taskOperations">
-		    {dialog}
-		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Send Invite</button>
+		    {invite}
+		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#duty-invite">Send Invite</button>
 		    </div>);
 		
 
@@ -330,21 +404,26 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 	loadDuties: function(){
 	    
 	    var self = this;
-	    $.get(server.api.duties)
+	    server.api.dutiesReq({type: 'GET'})
 	    .done(function(data){
-
-		self.setState({duties: hs.map(defs.DutyS.create)});
+		self.setState({duties: hs.map(defs.DutyS.create,data)});
 	    });
 
 	},
 
 	getInitialState: function(){
 	    var self = this;
-	    //this.loadDuties();
-
 	    
-	    var dutyList = this.props.duties ? this.props.duties : [];
-
+	    var dutyList;
+	    
+	    if(this.props.duties)
+		dutyList = this.props.duties;
+	    else{
+		dutyList = [];
+		this.loadDuties();
+	    }
+	    
+	    /*
 	    for(var duty in dutyList){
 
 		dutyList[duty].setUpdate(
@@ -353,6 +432,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
 			self.setState({x: 'y'});
 		    });
 	    }
+	    */
 	    return {duties: dutyList, duty: undefined};
 	    
 	    
@@ -427,7 +507,7 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
       }
     */	    
 
-    var tasks = hs.map(defs.TaskS.create,[{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, votes: []}]);
+    var tasks = hs.map(defs.TaskS.create,[{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, reports: []}]);
     var users = [{username: "user1"},{username: "user2"}]; //hs.map(validator(schema.User),[{username: "user1"},{username: "user2"}]);
     var duties = hs.map(defs.DutyS.create,[{name: "duty1", participants: users, tasks: tasks},{name: "duty2", participants: users, tasks:[]}]);
     
@@ -436,6 +516,6 @@ requirejs(["server","signal","defs","ui","util"],function(server,signal,defs,ui,
     ui.render({
 	nav: ui.LoggedMenu,
 	title: <h2>Duties</h2>,
-	body: <Duties duties={duties}/>    
+	body: <Duties />    
     });
 });
