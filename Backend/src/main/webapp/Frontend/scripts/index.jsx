@@ -50,7 +50,7 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 	}
     });
 
-    server.onLogin(function(){window.location = 'duties.html'});
+    server.onLogin(function(user,e){if(!user.error) window.location = 'duties.html'});
 
     ui.render({
 	title: "Duites!",
