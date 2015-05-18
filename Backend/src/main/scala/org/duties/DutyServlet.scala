@@ -44,8 +44,9 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     if (missingRefs.nonEmpty) mkError("There is no duty containing this task_id: " +missingRefs.head.task_id)
     else 
     if (!isAuthor) mkError("Author must be logged")
-    else {      
-      mk[Invite](invite, Invites)
+    else {
+      val taskRefs = invite.tasks.map(t => TaskRefs.find(t.task_id)).flatten
+      mk[Invite](invite.copy(tasks = taskRefs), Invites)
     }
   }
   
@@ -64,17 +65,15 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
 
   //validates that task_id exists
   def mkReport(json: String) = try {
-    val rep: Report = read[Report](json)
-    val task: Option[Task] = Tasks.fromRef(rep.task)
+    val rep: Report = read[Report](json)    
+    val ref: Option[TaskRef] = TaskRefs.find(rep.task.task_id)   
+    val task: Option[Task] = ref.flatMap(Tasks.fromRef)
 
     if (!task.isDefined) mkError("This task doesn't exist: " + rep.task.task_id)
-    if (!task.get.is_paid) mkError("This task is not paid or entrusted")
     //todo: check if state is entrusted
     //todo: check if reporter is owner
-    else {
-      println("!! MAKIN REPORT")
-      mk[Report](rep, Reports)
-    }
+    //if (!task.get.is_paid) mkError("This task is not paid or entrusted")
+    else mk[Report](rep.copy(task = ref.get), Reports)
   } catch renderUnprocessable
 
   // create by forms
@@ -130,21 +129,18 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     
   post("/report/form"){
     val u = requireAuth
-    mk[Report](params("json"), Reports)
+    mkReport(params("json"))
   }
 
   post("/report"){
     val u = requireAuth
-    mk[Report](request.body, Reports)
+    mkReport(request.body)
   }
 
   def mapTasks(json: String) = try {
       val taskrefs = read[Seq[TaskRef]](json)            
       val tasks: Seq[(TaskRef,Option[Task])] = taskrefs.map(r => (r, Tasks.fromRef(r)))
-      val inexistent = tasks.find(t => !t._2.isDefined)     
-      
-      println("TASKS...: " +tasks)
-      println(inexistent)
+      val inexistent = tasks.find(t => !t._2.isDefined)           
       
       if (inexistent.isDefined) mkError("This task is inexistent: " + inexistent.get._1.task_id)
       else write(tasks.map(_._2).flatten)
