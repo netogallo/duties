@@ -1,8 +1,39 @@
-define(["server","util"],function(server,util){
+define(["server","util","hs"],function(server,util,hs){
+    var alerts = [];
+    var alertCB;
+
+    var modal;
+
+    var alert = function(alert){
+
+	alerts.push(alert);
+	alertCB();
+    };
+    
+    var Dialog = React.createClass({
+
+	render: function(){
+
+	    return (
+		<div id={this.props.id} className="modal fade">
+		<div className="modal-dialog">
+		<div className="modal-content">
+		{this.props.children}
+		 </div>
+		</div>
+		</div>
+		
+	    );
+
+	}
+
+    });
+
     var Container = React.createClass({
 
 	getInitialState: function(){
 	    var self = this;
+	    alertCB = function(){self.setState({x:'y'});};
 	    server.onLogin(
 		function(user,rep){
 
@@ -28,7 +59,9 @@ define(["server","util"],function(server,util){
 	},
 
 	render: function(){
-	
+	    
+	    var self = this;
+	    alerts = hs.filter(function(a){return !a.dismissed;},alerts);
 	    var login = this.state.user ?
 	        <li>Welcome! {this.state.user.username}</li>
 		:
@@ -63,6 +96,18 @@ define(["server","util"],function(server,util){
 		</div>
 		<div className="container-head">
 		{this.props.title}
+		{
+		    alerts.map(function(alert){
+
+			return(
+			    <div className={"alert " + alert.className}>
+			    <button type="button" onClick={function(){alert.dismissed = true;self.setState({x:'y'});}} className="close">&times;</button>
+			    <h4>{alert.title}</h4>
+			    {alert.message}
+			    </div>
+			);
+		    })
+		}
 		</div>
 		<div className="container-body">
 		{this.props.body}
@@ -83,6 +128,8 @@ define(["server","util"],function(server,util){
 
 	Container: Container,
 	LoggedMenu: LoggedMenu,
+	alert: alert,
+	Dialog: Dialog,
 	render: function(c){
 
 	    React.render(

@@ -27,6 +27,11 @@ define(["hs"],function(hs){
 	return $.ajax(url,conf);
     });
 
+    var emptyReq = hs.curry(function(url,conf){
+	conf.dataType = "* text";
+	return req(url,conf);
+    });
+
     var currUser;
 
     req(hostname + "/me",{type: 'GET'})
@@ -66,7 +71,7 @@ define(["hs"],function(hs){
 	    login: hostname + "/login",
 	    loginReq: loginReq,
 	    invite:  hostname + "/invite",
-	    inviteReq: req(hostname + "/invite"),
+	    inviteReq: emptyReq(hostname + "/invite"),
 	    invites: hostname + "/invites",
 	    invitesReq: req(hostname + "/invites"),
 	    mapTasks: hostname + "/tasks",
@@ -74,11 +79,11 @@ define(["hs"],function(hs){
 	    duties: hostname + "/duties",
 	    dutiesReq: req(hostname + "/duties"),
 	    duty: hostname + "/duty",
-	    dutyReq: req(hostname + "/duty"),
+	    dutyReq: emptyReq(hostname + "/duty"),
 	    address: hostname + "/address",
 	    addressReq: req(hostname + "/address"),
 	    report: hostname + "/report",
-	    reportReq: req(hostname + "/report"),
+	    reportReq: emptyReq(hostname + "/report"),
 	    getUsers: function(query,cb){
 		console.log("get users");
 		if(users)

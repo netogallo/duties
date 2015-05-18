@@ -5,6 +5,8 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
     var hs = prelude('prelude-ls');
 
+    var Dialog = ui.Dialog;
+
     /*
     tv4.addSchema('User',schema.User);
     tv4.addSchema('Task',schema.Task);
@@ -85,25 +87,6 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		</div>
 	    );
 	}
-    });
-
-    var Dialog = React.createClass({
-
-	render: function(){
-
-	    return (
-		<div id={this.props.id} className="modal fade">
-		<div className="modal-dialog">
-		<div className="modal-content">
-		{this.props.children}
-		 </div>
-		</div>
-		</div>
-		
-	    );
-
-	}
-
     });
 
     var Task = React.createClass({
@@ -384,9 +367,13 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 			tasks: hs.map(function(t){return {task_id: t.id}},spec.tasks)
 		    }})
 		.done(function(res){
-
-		    console.log("good");
-		    console.log(res);
+		    $('#duty-invite').modal('hide');
+		    ui.alert({
+			className: "alert-success",
+			title: "Success!",
+			message: "Invites have been sent!"
+		    });
+		    
 		})
 		.fail(function(error){
 		    console.log("bad");
