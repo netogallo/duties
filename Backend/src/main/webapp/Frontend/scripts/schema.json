@@ -39,11 +39,14 @@
         "type": "number",
         "description": "The number of coins deposited, either from entrusted person or as a reward. The sum of all payment values"
         },
+        "reward_bounty": {
+        "type": "number",
+        "description": "Total bounty minus penalty paid by entrusted. Reward goes to entrusted when the taks expires"
+        },
         "payments": {
         "type": "array",
         "description": "Payments made by participants"
-        "items": {
-            "type": "object", "properties": { 
+        "items": {"type": "object", "properties": { 
             "username": {"type": "string"},
             "value": {"type": "number"}
         }
@@ -53,7 +56,7 @@
 		"description": "The person that is responsible for performing this duty. Absence of the field indicates no persion is yet assigned to the task"
 	    },
 
-	    "reports": {
+	    "reported_by": {
 		"type": "array",
 		"description": "Users who claim the task was not completed.",
 		"items": {"type": "string"}
@@ -70,10 +73,10 @@
 		    "status": {
 			"type": "string",
 			"oneOf": [
-			    "free",
-			    "entrusted",
-			    "expired",
-                "almost_entrusted"
+			    "Free",
+			    "Entrusted",
+			    "Expired",
+                "Rewarded" //means either finished (if total_bounty >= penalty) or almost entrusted (if total_bounty < penalty)
 			]
 		    },
 		    "entrust_start": {
@@ -99,15 +102,15 @@
 	    },
 
 	    "author": {
-		"type": "object",
-        "properties": { "username": { "type": "string" } },
-		"description": "The username of the user that created the duty."
+		    "type": "object",
+            "properties": { "username": { "type": "string" } },
+		    "description": "The username of the user that created the duty."
 	    },
 
 	    "participants": {
-		"type": "array",
-		"description": "The users that are participating in the duty",
-		"items": {"$ref": "User"}
+		    "type": "array",
+		    "description": "The users that are participating in the duty",
+		    "items": {"$ref": "User"}
 	    },
 
 	    "tasks": {
