@@ -60,10 +60,15 @@ define(["hs"],function(hs){
 	    invite:  hostname + "/invite",
 	    inviteReq: req(hostname + "/invite"),
 	    invites: hostname + "/invites",
+	    invitesReq: req(hostname + "/invites"),
+	    mapTasks: hostname + "/tasks",
+	    mapTasksReq: req(hostname + "/tasks"),
 	    duties: hostname + "/duties",
 	    dutiesReq: req(hostname + "/duties"),
 	    duty: hostname + "/duty",
 	    dutyReq: req(hostname + "/duty"),
+	    address: hostname + "/address",
+	    addressReq: req(hostname + "/address"),
 	    getUsers: function(query,cb){
 		console.log("get users");
 		if(users)
