@@ -116,17 +116,57 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		,this.props.task.reported_by);
 	},
 
+	updateTask: function(){
+
+	    var self = this;
+
+	    server.api.mapTasksReq({
+		data: {
+		    data: [{task_id: self.props.task.id}]
+		}
+	    })
+	    .done(function(tasks){
+
+		var task = hs.find(
+		    function(task_){return task_.id == task.id;},
+		    tasks);
+
+		if(task)
+		    self.props.task.update(task);
+	    });
+	},
+
 	handleReport: function(e){
 	    
-	    var reported_by;
 	    var self = this;
+	    var reported_by;
 	    var logged = server.getLoggedUser();
-	    if(this.isReported())
-		reported_by = hs.filter(function(user){return user != logged.username},this.props.task.votes);
+
+	    if(!self.reportReq){
+		self.reportReq = true;
+		server.api.reportReq({
+		    data: {
+			reporter: logged,
+			task: {task_id: self.props.task.id}
+		    }})
+		.fail(function(error){
+		    alert("Joder con Kaiser!");
+		    self.reportReq = false;
+		})
+		.done(function(){
+		    self.updateTask();
+		    self.reportReq = false;
+		});
+	    }
+	    
+	    /*
+	    if(self.isReported())
+		reported_by = hs.filter(function(user){return user != logged.username},self.props.task.votes);
 	    else
 		reported_by = hs.concat([[logged.username],this.props.task.reported_by]);
 	    
 	    this.props.task.update({reported_by: reported_by});
+	    */
 	},
 	
 	render: function(){
