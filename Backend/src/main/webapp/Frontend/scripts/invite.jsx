@@ -14,7 +14,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			data: {task_id: this.props.invite.tasks[task].id}
 		    })
 		    .done(function(addr){
-			self.state.addrs[self.props.invite.tasks[task]] = addr.btc_address;
+			self.state.addrs[self.props.invite.tasks[task].id] = addr.btc_address;
 			self.setState({addrs: self.state.addrs});
 			console.log(self.state.addrs);
 		    });
@@ -36,7 +36,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			self.setState({x:'y'});});
 	    }*/
 	    
-	    return {invite: invite, tasks: [], addrs: []};
+	    return {invite: invite, tasks: {}, addrs: {}};
 	},
 
 	render: function(){
@@ -46,10 +46,10 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		this.loadBtcAddress();
 		var tasks = hs.map(
 		    function(task){
-			if(!self.state.tasks[task]){
-			    self.state.tasks[task] = defs.CheckS.create({status: false, value: task});
+			if(!self.state.tasks[task.id]){
+			    self.state.tasks[task.id] = defs.CheckS.create({status: false, value: task});
 			}
-			return self.state.tasks[task];
+			return self.state.tasks[task.id];
 		    },this.props.invite.tasks);
 			    
 		
@@ -76,7 +76,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			<h4>Available Tasks</h4>
 			<div className="with-floats status-holder">
 			{tasks.map(function(task){
-			    return (<InviteTask task={task} address={self.state.addrs[task]} />);
+			    return (<InviteTask task={task} address={self.state.addrs[task.id]} />);
 			})}
 		        </div>
 		        </div>
@@ -120,7 +120,6 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 				console.log("Bad Ref",invites[invite].tasks[task]);
 			}
 		    }
-		    console.log(invites);
 		    self.setState({invites: hs.filter(function(i){return i.duty;},invites)});
 		});
 	    })
