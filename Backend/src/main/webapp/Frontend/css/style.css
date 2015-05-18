@@ -1,12 +1,21 @@
 .dutyList{
 
-    overflow-y: scroll;
 }
 
 .btc-curr{
 
     background: url("/Frontend/res/btc-ico-sm.png") no-repeat;
     background-size: contain;
+}
+
+.ui-scroll{
+
+    overflow-y: scroll;
+}
+
+.ui-frame{
+
+    height: 100%;
 }
 
 .duty > .participants{
@@ -16,8 +25,37 @@
     margin-bottom: 10px;
 }
 
-.duty > .participants > span{
-    margin-right: 5px;
+.col-container-1{
+    height: 50px;
+}
+
+.col-container-2{
+    height: 100px;
+}
+
+.col-container-4{
+    height: 200px;
+}
+
+.col-container-8{
+    height: 400px;
+}
+
+.col-container-10{
+    height: 500px;
+}
+
+.col-container-12{
+    height: 600px;
+}
+
+.duty-body{
+
+    padding: 5px;
+}
+
+h3{
+    margin: 0px 0px 0px 0px;
 }
 
 .task{
@@ -36,6 +74,8 @@
     boder: 2px solid #2f71aa;
     background: #2f71aa;
     font-color: #ffffff;
+    padding-top: 5px;
+    padding-bottom: 5px;
     /*min-height: 30px;*/
 }
 
@@ -53,8 +93,22 @@
 .task > .taskBody{
 
     border: 2px solid #2f71aa;
-    margin-top: -10px;
     padding: 0px 5px 5px 5px;
+}
+
+.status-holder{
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.with-floats{
+    
+    overflow: auto;
+}
+
+.span-input > input{
+
+    margin-top: 0px;
 }
 
 .task > .taskEmptyBody{
@@ -82,4 +136,21 @@
 .label-input {
 
     font-size: 15px;
+}
+
+.container-body{
+    height: 400px;
+}
+
+.container-body > *{
+    height: 100%;
+}
+
+.sel-list{
+
+    height: 100%;
+}
+
+.list-group{
+
 }

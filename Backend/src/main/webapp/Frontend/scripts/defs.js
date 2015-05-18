@@ -15,7 +15,8 @@ define(["signal","hs"],function(signal,hs){
 	penalty: {type: Types.prim},
 	recurrent: {type: Types.prim},
 	state: {type: Types.prim},
-	reported_by: {type: Types.prim}
+	reported_by: {type: Types.prim},
+	payments: {type: Types.prim}
     });
 
     var DutyS = Signal({
@@ -24,7 +25,7 @@ define(["signal","hs"],function(signal,hs){
 	author: {type: Types.prim},
 	participants: {type: Types.prim},
 	tasks: {type: Types.array.of(TaskS)},
-	unsaved: {type: Types.prim}
+	unsaved: {type: Types.prim},
     });
 
     var CheckS = Signal({
