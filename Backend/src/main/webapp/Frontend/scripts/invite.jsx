@@ -16,7 +16,6 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		    .done(function(addr){
 			self.state.addrs[self.props.invite.tasks[task].id] = addr.btc_address;
 			self.setState({addrs: self.state.addrs});
-			console.log(self.state.addrs);
 		    });
 		}
 	    }
@@ -76,7 +75,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			<h4>Available Tasks</h4>
 			<div className="with-floats status-holder">
 			{tasks.map(function(task){
-			    return (<InviteTask task={task} address={self.state.addrs[task.id]} />);
+			    return (<InviteTask task={task} address={self.state.addrs[task.value.id]} />);
 			})}
 		        </div>
 		        </div>

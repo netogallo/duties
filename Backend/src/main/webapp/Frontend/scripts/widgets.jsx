@@ -73,6 +73,7 @@ define(["defs","util","hs"],function(defs,util,hs){
 	render: function(){
 	    var self = this;
 	    var task = this.props.task.value;
+	    console.log("addr",self.props.address);
 	    setTimeout(function(){
 		if(!self.qrCode && self.props.address)
 		    self.qrCode = new QRCode(
