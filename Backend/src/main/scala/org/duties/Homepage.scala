@@ -25,7 +25,7 @@ trait Homepage {
 
     def loggedUser = maybeAuth
     def isLogged = loggedUser.isDefined
-    val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get)) else Nil
+    val invites: Seq[Invite] = if (isLogged) (Invites.findAdvocate(loggedUser.get.username)) else Nil
     val ref = TaskRefs.fromTask(task)
     val refs = Seq(ref)
     val invite = loggedUser.map(author => Invite(kmels, netogallo, Seq(ref)))
@@ -94,8 +94,8 @@ trait Homepage {
           <input type='submit' value='Post report'/>
         </form>
 
-        <h1>GET /address :: JSON </h1>
-        <form method="GET" action="/address/form">
+        <h1>POST /address :: JSON </h1>
+        <form method="POST" action="/address/form">
           <textarea name='json' rows='4' cols='45'>{write(ref)}</textarea>
           <input type='submit' value='Get address'/>
         </form>
@@ -109,6 +109,18 @@ trait Homepage {
           <input type='submit' value='Validate'/>
         </form>   
       </body>
+    </html>
+  }
+
+  def admin = {
+    import org.bitcoinj.core._
+    import Wallet._
+    
+    <html>
+    <body>
+      <h1>Wallet balance: ${Bithack.wallet.getBalance(BalanceType.ESTIMATED)}</h1>
+      <h1>Total incoming transactions</h1>
+    </body>
     </html>
   }
 }

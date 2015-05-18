@@ -10,9 +10,8 @@ import java.io.File
 import java.net.InetAddress
 
 object Bithack {
-  final val OPERATING_NETWORK = //MainNetParams.get
-    TestNet3Params.get
-  final val BLOCKSTORE = new PostgresFullPrunedBlockStore(OPERATING_NETWORK, 1000, "localhost", "bithacks_testnet", "postgres", "postgres")
+  final val OPERATING_NETWORK = MainNetParams.get
+  final val BLOCKSTORE = new PostgresFullPrunedBlockStore(OPERATING_NETWORK, 1000, "localhost", "bithacks_mainnet", "postgres", "postgres")
   final val BLOCKCHAIN = new BlockChain(OPERATING_NETWORK, BLOCKSTORE)
   final val NETWORK: PeerGroup = new PeerGroup(OPERATING_NETWORK, BLOCKCHAIN)
   final val walletFile = new File("bithack_main.wallet")
@@ -32,7 +31,7 @@ object Bithack {
     NETWORK.start()
     new Thread(new Runnable {
       def run() {
-        NETWORK.downloadBlockChain()
+        //NETWORK.downloadBlockChain()
       }
     }).start
   }

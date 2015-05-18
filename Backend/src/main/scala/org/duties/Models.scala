@@ -16,17 +16,23 @@ import javax.xml.bind.DatatypeConverter
 import org.bitcoinj.core.{Address, Sha256Hash}
 
 object Models {
-  case class Task(name: String, description: Option[String] = None, penalty: Double, state: String = "Free", entrusted: Option[String] = None, reported_by: Seq[UserIdent] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
+  case class Task(name: String, description: Option[String] = None, penalty: Double, state: Option[String] = Some("Free"), total_bounty: Option[Double] = None, reward_bounty: Option[Double] = None, entrusted: Option[String] = None, payments: Seq[TaskPayment] = Seq(), reported_by: Seq[UserIdent] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
     def is_paid = entrusted.isDefined
   }
   case class Duty(author: UserIdent, name: String, participants: Seq[UserIdent], tasks: Seq[Task], id: String = (new ObjectId().toString())) 
   case class User(username: String, password: String, id: String = (new ObjectId().toString()))
   case class UserIdent(username: String)
   case class TaskRef(task_id: String, duty_id: Option[String] = None)  
-  case class TaskOutput(task_ref: TaskRef, owner: UserIdent, btc_address : String)
-  case class TaskPayment(tx_hash: String, taskOutput: TaskOutput, value: Double)
-  case class TaskReward(tx_hash: String, taskOutput: TaskOutput, value: Double)
- 
+  case class TaskOutput(owner: UserIdent, task: TaskRef, btc_address: String)
+  case class TaskPayment(tx_hash: String, taskOutput: TaskOutput, value: Double){
+    def task_ref = taskOutput.task
+    def paid_by = taskOutput.owner
+  }
+  case class TaskReward(tx_hash: String, taskOutput: TaskOutput, value: Double){
+    def task_ref = taskOutput.task
+    def rewarded_by = taskOutput.owner
+  }
+  
   case class Report(reporter: UserIdent, task: TaskRef)
   case class Invite(author: UserIdent, advocate: UserIdent, tasks: Seq[TaskRef] = Seq(), duty: Option[Duty] = None, id: String = (new ObjectId().toString()))
 }

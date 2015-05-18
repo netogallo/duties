@@ -18,12 +18,13 @@ import org.bitcoinj.core.{Address, Coin, Sha256Hash}
 
 class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/") { home }
-  
+  get("/admin") { admin } 
+
   //creates task refs and generates addreses for each user
   def mkDuty(in: String) = {
-    val username = requireAuth
+    val uid = requireAuth
     val duty = read[Duty](in)
-    val isAuthor = username.equals(duty.author.username)
+    val isAuthor = uid.username == duty.author.username
     val missingPpl = duty.participants.filter(p => !Users.existsIdent(p.username))
     
     if (missingPpl.nonEmpty) mkError("All participants must exist. There is no username " + missingPpl.head.username)
@@ -35,9 +36,9 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   //author must be logged in
   //every task must exist
   def mkInvite(in: String) = {
-    val username = requireAuth
+    val uid = requireAuth
     val invite = read[Invite](in)
-    val isAuthor = username.equals(invite.author.username)
+    val isAuthor = uid.username == (invite.author.username)
 //    val refs = invite.tasks.map(t => TaskRefs.fromTask(t, Some(d)))
     val missingRefs: Seq[TaskRef] = invite.tasks.filter(r => !TaskRefs.exists(r.task_id))
 
@@ -50,16 +51,17 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     }
   }
   
-  def taskOutput(json: String, username: String): String = try {    
+  def taskOutput(json: String, uid: UserIdent): String = try {    
     val ref = read[TaskRef](json)
     val task_id = ref.task_id
-    val duty_id = ref.duty_id
+    println("Looking for testOutput's taskRef : "+task_id)
     val taskRef: Option[TaskRef] = TaskRefs.find(task_id)
-    val taskOutput = taskRef.map(ref => TaskOutputs.findOutput(ref, UserIdent(username)))
-
+    println("Task Ref: "+ taskRef)
+    val taskOutput: Option[TaskOutput] = taskRef.flatMap(ref => TaskOutputs.findOutput(ref, uid))
+    
     if (!taskRef.isDefined) mkError("This task isn't referenced: " + ref.task_id)
     else
-    if (!taskOutput.isDefined) mkError("Something's odd, task exists but cannot find output for username " +username)
+    if (!taskOutput.isDefined) mkError("Something's odd, task exists but cannot find output for username " +uid.username)
     else write(taskOutput.get)
   } catch renderUnprocessable
 
@@ -165,23 +167,24 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
 
   get("/invites") {
     val user = requireAuth
-    write(Invites.findAdvocate(user))
+    write(Invites.findAdvocate(user.username))
   }
 
   get("/me") {
     maybeAuth match {
       case None => mkError("Nobody logged.")
-      case Some(u) => write(UserIdent(u))
+      case Some(u) => write(u)
     }
   }
   
   post("/address/form") { 
-    val u = requireAuth
-    taskOutput(params("json"), u) 
+    val uid = requireAuth
+    println("Required auth " + uid.username)
+    taskOutput(params("json"), uid) 
   }
 
   post("/address"){ 
-    val u = requireAuth
-    taskOutput(request.body, u) 
+    val uid = requireAuth
+    taskOutput(request.body, uid)
   }  
 }

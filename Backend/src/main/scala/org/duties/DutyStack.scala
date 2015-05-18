@@ -42,14 +42,15 @@ trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
     write(Error(msg))
   }
 
-  def maybeAuth: Option[String] = cookies.get(Auth.COOKIE)
+  def maybeAuth: Option[UserIdent] = cookies.get(Auth.COOKIE)
                                   .flatMap(Auth.decrypt)
                                   .map(_.username)
+                                  .map(uname => UserIdent(uname))
 
  /* auth */ 
-  def requireAuth: String = try {
+  def requireAuth: UserIdent = try {
     def require = halt(403, mkError("Please login"))
-    maybeAuth.getOrElse(require)   
+    maybeAuth.getOrElse(require)
   } catch {
     case hack: IllegalBlockSizeException => {
       println("Warning. Got IllegalBlockSizeException " + cookies.get(Auth.COOKIE))

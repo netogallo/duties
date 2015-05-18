@@ -11,14 +11,13 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
 
   def findTaskOutput(adr: Address): Option[TaskOutput] = TaskOutputs.findAddress(adr)
 
-  def setEntrusted(task: Task, owner: UserIdent) = ???   
-  def addPayment(task: Task, owner: UserIdent, value: Double): TaskPayment = ???
-  def addReward(task: Task, owner: UserIdent, value: Double): TaskReward = ???
+//  def addPayment(task: Task, owner: UserIdent, value: Double): TaskPayment = 
+  //def addReward(task: Task, owner: UserIdent, value: Double): TaskReward = ???
 
   //insert payment, mark as paid or add rewards
   def mkPayment(payment: TaskPayment): Either[TaskPayment, TaskReward] = {
     val taskOutput = payment.taskOutput
-    val t: Option[Task] = Tasks.fromRef(taskOutput.task_ref)
+    val t: Option[Task] = Tasks.fromRef(taskOutput.task)
     val txHash = payment.tx_hash
     val value = payment.value
     //if we didn't find any task, return silently
@@ -33,32 +32,41 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
         val penalty = task.penalty
         val owned_by_owner = penalty 
         
-        if (value > penalty){
-          setEntrusted(task, outputOwner)
-          Left(addPayment(task, outputOwner, value))
-        } else 
-          Left(addPayment(task, outputOwner, value))
-      } else Right(addReward(task, outputOwner, value))
+        if (value >= penalty){
+          println("Detected entrusted")
+          Payments.addPayment(payment)
+          Tasks.setEntrusted(task, outputOwner)
+          Left(payment)
+        } else  { 
+          println("Detected payment")
+          Tasks.setRewarded(task, outputOwner)
+          Payments.addPayment(payment); Left(payment) 
+        }
+      } else {
+        println("Detected reward")
+        val reward = TaskReward(payment.tx_hash, payment.taskOutput, payment.value)
+        Rewards.addReward(reward)
+        Right(reward)
+      }
     }
  }
             
-                 
-
-  
   override def onCoinsReceived(w: Wallet, tx: Transaction, prevBalance: Coin, newBalance: Coin): Unit = {    
-    val value = tx.getValue(w)    
+    val value = tx.getValue(w).toPlainString.toDouble //BTC
+
     val btc_outputs = tx.getWalletOutputs(w)
     def getAddress: TransactionOutput => Address = out =>  out.getAddressFromP2PKHScript(Bithack.OPERATING_NETWORK)
     val btc_addresses = btc_outputs map getAddress
     
     val payments = btc_addresses.flatMap(btc_adr => {      
+      println("Recibimos en address: " + btc_adr.toString + "; buscando ...")
       val taskOutput = findTaskOutput(btc_adr)
       
       if (taskOutput.isDefined){        
         val out = taskOutput.get        
         //val task = Tasks.fromRef(taskOutput)
         //val penalty = task.map(_.penalty)
-        val taskPayment = TaskPayment(tx.getHash.toString, out, value.longValue)
+        val taskPayment = TaskPayment(tx.getHash.toString, out, value)
         val deposit = mkPayment(taskPayment)
         Some(taskPayment)
       } else {

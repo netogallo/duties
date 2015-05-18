@@ -38,8 +38,49 @@ object Mongo {
   
   object Collections {
     object Tasks extends Collections[Task] with MongoClient {
-      override def name = "tasks"
-        
+      val Q: TaskRef => DBObject = ref => MongoDBObject("tasks._id" -> ref.task_id)
+      override def name = "tasks"      
+      def bountyIncrease(taskRef: TaskRef, value: Double): Int = {  
+        val t = fromRef(taskRef)
+        if (!t.isDefined) 0
+        else {
+          val task = t.get
+          val dutyTask = Q(taskRef)
+          val newBounty: Double = task.total_bounty.getOrElse(0d) + value
+          println("Setting total bounty to "+newBounty)
+          val nextBounty = MongoDBObject("$ref" -> MongoDBObject("tasks.$.total_bounty" -> newBounty))
+          val result = db.getCollection(Duties.name).update(dutyTask, nextBounty)
+          result.getN
+        }
+      }        
+      def rewardIncrease(taskRef: TaskRef, value: Double): Int ={
+        val t = fromRef(taskRef)
+        if (!t.isDefined) 0
+        else {
+          val task = t.get
+          val dutyTask = Q(taskRef)
+          val newReward = (task.total_bounty.getOrElse(0d) + value)
+          println("Setting reward to "+newReward)
+          val nextReward = MongoDBObject("$ref" -> MongoDBObject("tasks.$.reward_bounty" -> newReward))
+          val result = db.getCollection(Duties.name).update(dutyTask, nextReward)
+          result.getN
+        }
+      }
+      //todo: move previous payments to rewards
+      def setEntrusted(task: Task, owner: UserIdent): Int = {
+        val dutyTask = MongoDBObject("tasks._id" -> task.id)
+        val taskEntrusted = MongoDBObject("$set" -> MongoDBObject("tasks.$.entrusted" -> owner.username))
+        val taskState = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Entrusted"))
+        val result = db.getCollection(Duties.name).update(dutyTask, taskEntrusted)
+        val result2 = db.getCollection(Duties.name).update(dutyTask, taskState)
+        result.getN
+      }
+      def setRewarded(task: Task, owner: UserIdent): Int = {
+        val dutyTask = MongoDBObject("tasks._id" -> task.id)
+        val taskState = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Rewarded"))
+        val result = db.getCollection(Duties.name).update(dutyTask, taskState)
+        result.getN
+      }
       def fromRef(r: TaskRef): Option[Task] = {
         val q = "tasks" $elemMatch MongoDBObject("_id" -> r.task_id)
         val o = Option(db.getCollection(Duties.name).findOne(q))
@@ -47,32 +88,29 @@ object Mongo {
         val tasks: Option[Seq[Task]] = d.map(duty => duty.tasks)
         val t = tasks.flatMap(t => t.find(task => task.id == r.task_id))
         t
-      }
-      
-      //not used
+      }      
       override def fromMongo(o: DBObject): Task = {
-        val n = o.as[String]("name")
-        val d = Option(o.as[String]("description"))
-        val p = o.as[Double]("penalty")
-        val e = Option(o.as[String]("entrusted"))
-
-        //val rs: Seq[String] = o.as[BasicDBList]("reports").toSeq.map(_.asInstanceOf[String])
-        val r = o.as[Boolean]("recurrent")
-        val tid = o.as[String]("_id")
-        
+        val tid = o.as[String]("_id")        
         val ref = TaskRefs.find(tid)
-        val reports: Seq[Report] = ref.map(ref => Reports.findReports(ref)).getOrElse(Nil)
+        val reports: Seq[Report] = ref.map(Reports.findReports).getOrElse(Nil)
         val uids = reports.map(_.reporter)
-
+        
         new Task(
-          name = n,
-          description = d,
-          state = o.as[String]("state"),
-          penalty = p,
-          entrusted = e,
+          name = o.as[String]("name"),
+          description = Option(o.as[String]("description")),
+          state = Option(o.as[String]("state")),
+          penalty = o.as[Double]("penalty"),
+          entrusted = Option(o.as[String]("entrusted")),
+          recurrent = o.as[Boolean]("recurrent"),
           reported_by = uids,
-          recurrent = r,
-          id = tid
+          id = tid,
+          total_bounty = Option(o.as[Double]("total_bounty")),
+          reward_bounty = Option(o.as[Double]("reward_bounty")),
+          payments = {
+            val xx = ref.map(Payments.findPayments).getOrElse(Nil)
+            println("Found payments: " +xx.mkString(","))
+            xx
+          }
         )
       }
     }
@@ -105,7 +143,7 @@ object Mongo {
         //generate task outputs too
         val outputs: Seq[Seq[TaskOutput]] = refs.map(ref => {
           members.map(m => {
-            val address = TaskOutput(ref, m, Bithack.mkReceivingAddress.toString)
+            val address = TaskOutput(m, ref, Bithack.mkReceivingAddress.toString)
             db.getCollection(TaskOutputs.name).insert(TaskOutputs.toMongo(address))
             address
           })
@@ -233,13 +271,21 @@ object Mongo {
 
     implicit object TaskOutputs extends Collections[TaskOutput] with MongoClient {
       def name = "task_outputs"
-      def findAddress(adr: Address): Option[TaskOutput] = {
+      def findAddress(adr: Address): Option[TaskOutput] = try {
+        println("#findAddress: " + adr.toString)
         val q = MongoDBObject("btc_address" -> adr.toString)
         val o = Option(db.getCollection(name).findOne(q))
         o.map(fromMongo)
+      } catch {
+        case e: Exception => {
+          println(e)
+          e.printStackTrace()
+          println("Could not find, returning None as TaskOutput for address " +adr.toString)
+          None
+        }
       }
       def findOutput(ref: TaskRef, uid: UserIdent): Option[TaskOutput] = {
-        val q = MongoDBObject("owner" -> UserIdents.toMongo(uid), "task" -> TaskRefs.toMongo(ref))
+        val q = MongoDBObject("owner" -> UserIdents.toMongo(uid), "task" -> TaskRefs.toMongo(ref))       
         val o = Option(db.getCollection(name).findOne(q))
         o.map(fromMongo)
       }
@@ -249,13 +295,13 @@ object Mongo {
         val t = u.asInstanceOf[TaskOutput]
         ta.update("btc_address", t.btc_address.toString)
         ta.update("owner", UserIdents.toMongo(t.owner))        
-        ta.update("task", TaskRefs.toMongo(t.task_ref))        
+        ta.update("task", TaskRefs.toMongo(t.task))
         ta
       }
       override def fromMongo(o: DBObject) = {       
-        val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))        
+        val address = new Address(Bithack.OPERATING_NETWORK, o.as[String]("btc_address"))
         TaskOutput(
-          task_ref = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
+          task = TaskRefs.fromMongo(o.as[MongoDBObject]("task")), 
           owner = UserIdents.fromMongo(o.as[MongoDBObject]("owner")),
           btc_address = address.toString
         )
@@ -282,6 +328,55 @@ object Mongo {
         )       
     }
 
+    implicit object Payments extends MongoClient {
+      def name = "payments"
+      
+      def findPayments(task: TaskRef): Seq[TaskPayment] = {
+        val q = MongoDBObject("output.task" -> TaskRefs.toMongo(task))
+        println("Looking for payments on task " + q)
+        db.getCollection(name).find(q).toArray().map(Payments.fromMongo)
+      }
+      
+      def toMongo(p: TaskPayment):DBObject = MongoDBObject(
+        "tx_hash" -> p.tx_hash.toString,
+//        "task" -> TaskRefs.toMongo(p.task_ref),
+        "output" -> TaskOutputs.toMongo(p.taskOutput),
+//MongoDBObject("owner" -> UserIdents.toMongo(p.paid_by)),
+        "value" -> p.value)
+
+      def addPayment(payment: TaskPayment): Int = {
+        val taskRef = payment.task_ref
+        val result = db.getCollection(name).insert(toMongo(payment))
+        if (result.getN > 0) {
+          Tasks.bountyIncrease(taskRef, payment.value)          
+          result.getN 
+        } else 0                
+      }
+
+      def fromMongo(o: DBObject): TaskPayment = TaskPayment(
+          tx_hash = o.as[String]("tx_hash"),
+          taskOutput = TaskOutputs.fromMongo(o.as[MongoDBObject]("output")),
+          value = o.as[Double]("value")
+      )
+    }
+
+    implicit object Rewards extends MongoClient {
+      def name = "rewards"
+      def toMongo(reward: TaskReward): DBObject = MongoDBObject(
+        "tx_hash" -> reward.tx_hash.toString,
+        "task" -> MongoDBObject("task_id" -> TaskRefs.toMongo(reward.task_ref)),
+        "output" -> MongoDBObject("owner" -> UserIdents.toMongo(reward.rewarded_by)),
+        "value" -> reward.value)
+
+      def addReward(reward: TaskReward): Int = {
+        val taskRef = reward.task_ref
+        val result = db.getCollection(name).insert(toMongo(reward))
+        if (result.getN > 0) {
+          Tasks.bountyIncrease(taskRef, reward.value)
+          Tasks.rewardIncrease(taskRef, reward.value)
+        } else 0
+      }
+    }
   }
 }
 
