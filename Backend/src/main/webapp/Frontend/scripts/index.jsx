@@ -10,16 +10,12 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 		username: $('input[name="email"]').val(),
 		password: $('input[name="password"]').val(),
 	    })})
-	    .done(
-		function(data){
-		    console.log("good");
-		    console.log(data);
-		})
-	    .fail(
-		function(data){
-		    console.log("bad");
-		    console.log(data);
-		});
+	    .done(function(data){
+		ui.alertSuccess("Account has been created!");
+	    })
+	    .fail(function(data){
+		ui.alertError("The username already exists!");
+	    });
 	},
 
 	render: function(){
@@ -31,7 +27,7 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 		<input type="text" id="email" className="form-control" name="email"></input>
 		<label htmlFor="password">Password</label>
 		<input type="password" id="password" className="form-control" name="password"></input>
-		<input type="submit" value="Create User"></input>
+		<input className="btn btn-default" type="submit" value="Create User"></input>
 		</form>
 		</div>);
 	}

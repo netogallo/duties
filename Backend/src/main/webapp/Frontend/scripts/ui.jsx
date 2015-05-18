@@ -9,6 +9,22 @@ define(["server","util","hs"],function(server,util,hs){
 	alerts.push(alert);
 	alertCB();
     };
+
+    var alertSuccess = function(msg){
+	alert({
+	    className: "alert-success",
+	    title: "Success!",
+	    message: msg
+	});
+    };
+
+    var alertError = function(msg){
+	alert({
+	    className: "alert-error",
+	    title: "Error!",
+	    message: msg
+	});
+    };
     
     var Dialog = React.createClass({
 
@@ -129,6 +145,8 @@ define(["server","util","hs"],function(server,util,hs){
 	Container: Container,
 	LoggedMenu: LoggedMenu,
 	alert: alert,
+	alertError: alertError,
+	alertSuccess: alertSuccess,
 	Dialog: Dialog,
 	render: function(c){
 
