@@ -41,9 +41,9 @@ define(["hs"],function(hs){
 		}
 	    })
 	    .fail(function(error){
-
+		
 		for(cb in onLogin){
-		    conf.data.error = true;
+		    data.error = true;
 		    onLogin[cb](data,error);
 		}
 	    });

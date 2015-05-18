@@ -6,6 +6,7 @@ define(["server","util"],function(server,util){
 	    server.onLogin(
 		function(user,rep){
 
+		    console.log(user);
 		    if(!user.error){
 
 			self.setState({user: user});
@@ -51,7 +52,7 @@ define(["server","util"],function(server,util){
 		<div className="container">
 		<div className="navbar navbar-static">
 		<div className="navbar-inner">
-		<ul role="navigation" className="nav">
+		<ul role="navigation" className="nav nav-tabs">
 		{this.props.nav.map(function(n){
 		    return (<li><a href={n.href}>{n.name}</a></li>);
 		})}

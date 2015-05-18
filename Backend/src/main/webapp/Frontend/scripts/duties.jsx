@@ -39,7 +39,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    self.props.selectDuty(duty);
 	    });
 
-	    return (<div className="dutyList list-group">
+	    return (<div className={"dutyList list-group " + this.props.className}>
 	    {this.props.duties.map(function(d){
 		
 		var classes=["list-group-item"];
@@ -196,7 +196,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    <h3>{this.props.task.name}</h3>
 		    </div>
 		    <div className="taskBody taskEmptyBody">
-		    <div className="taskStatus">
+		    <div className="taskStatus status-holder">
 		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.reported_by.length}</span></span>
 		    &nbsp;
 		    <span className="label label-info">{this.props.task.entrusted}</span>
@@ -345,16 +345,18 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<div className={this.props.className} style={{overflow:'auto'}}>
 		<form onSubmit={this.onSubmit(this)(participants)(freeTasks)}>
 		<h3>Invite Users</h3>
-		<div>
+		<div className="status-holder">
 		{participants.map(function(participant){
 		    return (
 			<span className="label label-info label-participant label-input">
+			<span className="span-input">
 			<input onChange={function(){participant.update({status: !participant.status})}} value={participant.status} type="checkbox" />
+			</span>
 			{" "+participant.value.username}
 			</span>);
-		})};
+		})}
 		</div>
-		<div>
+		<div className="with-floats status-holder">
 		{freeTasks.map(function(task){
 		    console.log(task);
 		    return <widgets.InviteTask task={task}/>;
@@ -468,14 +470,14 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	    if(this.props.duty && this.props.duty.unsaved)
 		operations = (
-		    <div className="taskOperations">
+		    <div className="taskOperations col-container-1">
 		    {dialog}
 		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Create Task</button>
 		    <button type="button" onClick={this.saveDuty} className="btn btn-primary btn-sm">Save Duty</button>
 		    </div>);
 	    else
 		operations = (
-		    <div className="taskOperations">
+		    <div className="taskOperations col-container-1">
 		    {invite}
 		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#duty-invite">Send Invite</button>
 		    </div>);
@@ -484,24 +486,32 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	    if(this.props.duty)
 		return (
-		    <div className="duty" style={this.props.duty == {} ? {display:'none'} : {}}>
+		    <div className={"duty " + this.props.className} style={this.props.duty == {} ? {display:'none'} : {}}>
+		    
+		    <div className="duty-head col-container-1">
 		    <h3>{this.props.duty.name}</h3>
+		    </div>
+		    
+		    <div className="ui-scroll duty-body col-container-8">
 		    <div className="participants">
 		    {this.props.duty.participants.map(function(participant){
 			return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{penalty[participant.username] ? penalty[participant.username] : 0}</span></span>);
 		    })}
 		    </div>
-		    {operations}
+		    
 		    <div className="tasks">
-		    <div>
+		    <div className="with-floats">
 		    <h4>Tasks Assigned to Users</h4>
 		    {boundTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
-		    <div>
+		    <div className="with-floats">
 		    <h4>Free Tasks</h4>
 		    {freeTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
 		    </div>
+		    </div>
+
+		    {operations}
 		    </div>);
 	    else
 		return <div className="duty"></div>;
@@ -594,16 +604,18 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	    return (
 		<div className="duties">
-		<div className="col-md-4">
-		<DutyList selectDuty={this.selectDuty} duties={this.state.duties} />
+		<DutyList className="ui-scroll col-container-10 col-md-4" selectDuty={this.selectDuty} duties={this.state.duties} />
+
+		<Duty className="ui-frame col-md-8 col-container-10" duty={this.state.duty} />
+
+		<div className="col-md-12 col-container-1 duty-actions">
 		<Dialog id="duty-edit">
 		<DutyEdit onSubmit={this.saveDuty} className="modal-body"/>
 		</Dialog>
+
 		<button type="button" className="btn btn-primary btn-lg" data-toggle="modal" data-target="#duty-edit">Create Duty</button>
 		</div>
-		<div className="col-md-8">
-		<Duty duty={this.state.duty} />
-		</div>
+
 		</div>
 	    );
 	}
