@@ -5,17 +5,20 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
     var Invite = React.createClass({
 
 	loadBtcAddress: function(){
-
+	    var self = this;
 	    if(this.props.invite)
 	    for(var task in this.props.invite.tasks){
-		server.api.addressReq({
-		    //type: 'GET',
-		    data: {task_id: this.props.invite.tasks[task].id}
-		})
-		.done(function(addr){
-		    this.state.addrs[this.props.invite.tasks[task]] = addr.btc_address;
-		    this.setState({addrs: this.state.addrs});
-		});
+		if(!self.state.addrs[self.props.invite.tasks[task]]){
+		    server.api.addressReq({
+			//type: 'GET',
+			data: {task_id: this.props.invite.tasks[task].id}
+		    })
+		    .done(function(addr){
+			self.state.addrs[self.props.invite.tasks[task]] = addr.btc_address;
+			self.setState({addrs: self.state.addrs});
+			console.log(self.state.addrs);
+		    });
+		}
 	    }
 	},
 
