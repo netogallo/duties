@@ -8,7 +8,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 	    var self = this;
 	    if(this.props.invite)
 	    for(var task in this.props.invite.tasks){
-		if(!self.state.addrs[self.props.invite.tasks[task]]){
+		if(!self.state.addrs[self.props.invite.tasks[task].id]){
 		    server.api.addressReq({
 			//type: 'GET',
 			data: {task_id: this.props.invite.tasks[task].id}
