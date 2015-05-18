@@ -245,7 +245,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<label htmlFor="duty-name">Name</label>
 		<input type="text" id="duty-name" className="form-control" name="duty-name"></input>
 		<widgets.Search sig={this.state.sig} onChange={onChange}/>
-		<input type="submit" value="Create Duty"></input>
+		<input className="btn btn-default" type="submit" value="Create Duty"></input>
 		</form>
 		</div>);
 	}
@@ -263,7 +263,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
     var DutyInvite = React.createClass({
 	getInitialState: function(){
 
-	    return {participants: [],tasks: []};
+	    return {participants: [],tasks: {}};
 	},
 
 	toggle: hs.curry(function(self,elem,collection,event){
@@ -305,13 +305,15 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    //var boundTasks = tasks[0];
 
 	    var freeTasks = hs.map(function(t){
-		if(!self.state.tasks[t]){
-		    self.state.tasks[t] = defs.CheckS.create({status: false, value: t});
-		    self.state.tasks[t].setUpdate(function(){self.setState({x:'y'});});
+		if(!self.state.tasks[t.id]){
+		    self.state.tasks[t.id] = defs.CheckS.create({status: false, value: t});
+		    self.state.tasks[t.id].setUpdate(function(){self.setState({x:'y'});});
 		}
-		return self.state.tasks[t];
+		return self.state.tasks[t.id];
 	    },
 		tasks[1]);
+
+	    console.log("sap",tasks[1]);
 
 	    var participants = hs.map(function(ps){
 		if(!self.state.participants[ps]){
@@ -341,7 +343,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		</div>
 		<div className="with-floats status-holder">
 		{freeTasks.map(function(task){
-		    console.log(task);
+		    console.log("sup",freeTasks);
 		    return <widgets.InviteTask task={task}/>;
 		})}
 		</div>
@@ -446,6 +448,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		});
 
 		self.props.duty.update({tasks: hs.concat([[task],self.props.duty.tasks])});
+		$('#task-edit').modal('hide');
 	    };
 
 	    var dialog = (
@@ -582,6 +585,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    });
 
 	    self.setState({duties: hs.concat([[dutyS],self.state.duties])});
+	    $('#duty-edit').modal('hide');
 	},
 
 	render: function(){

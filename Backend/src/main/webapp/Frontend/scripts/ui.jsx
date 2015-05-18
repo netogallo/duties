@@ -53,10 +53,11 @@ define(["server","util","hs"],function(server,util,hs){
 	    server.onLogin(
 		function(user,rep){
 
-		    console.log(user);
 		    if(!user.error){
 
-			self.setState({user: user});
+			setTimeout(
+			    function(){self.setState({user: user})},
+			    100);
 		    }
 		});
 
@@ -79,7 +80,7 @@ define(["server","util","hs"],function(server,util,hs){
 	    var self = this;
 	    alerts = hs.filter(function(a){return !a.dismissed;},alerts);
 	    var login = this.state.user ?
-	        <li>Welcome! {this.state.user.username}</li>
+	        <li><a href="#">Welcome! {this.state.user.username}</a></li>
 		:
 		(<li className="dropdown">
                 <a href="#" data-toggle="dropdown" className="dropdown-toggle">Log In<b className="caret"></b></a>

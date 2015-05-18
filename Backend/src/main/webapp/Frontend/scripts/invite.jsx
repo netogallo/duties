@@ -54,26 +54,34 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			    
 		
 		return (
-		    <div className="invite">
-		    <div className="participants">
-		    <h4>Participants</h4>
-		    {this.props.invite.duty.participants.map(
-			function(p){
-			    return (
-				<span className="label label-info label-participant">
-				{p.username}
-				</span>);
+		    <div className={"invite " + this.props.className}>
+			<div className="col-container-1">
+			<h4>{this.props.invite.duty.name}</h4>
+			</div>
+
+			<div className="invite-body col-container-10 ui-scroll">
+			<div className="participants">
+			<h4>Participants</h4>
+			<div className="statusHolder">
+			{this.props.invite.duty.participants.map(
+			    function(p){
+				return (
+					<span className="label label-info label-participant">{p.username}
+				    </span>);
+			    })}
+		        </div>
+			</div>
+		    
+			<div className="available-tasks">
+			<h4>Available Tasks</h4>
+			<div className="with-floats status-holder">
+			{tasks.map(function(task){
+			    return (<InviteTask task={task} address={self.state.addrs[task]} />);
 			})}
-		    </div>
-		    <div className="available-tasks">
-		    <h4>Available Tasks</h4>
-		    <div className="checkbox">
-		    {tasks.map(function(task){
-			console.log(task);
-			return (<InviteTask task={task} address={self.state.addrs[task]} />);
-	            })}
-		    </div>
-		    </div>
+		        </div>
+		        </div>
+		    
+		        </div>
 		    </div>
 		);
 	    }else
@@ -144,13 +152,9 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 	    );
 
 	    return (
-		<div className="col-md-12">
-		<div className="col-md-4">
-		<widgets.List items={listElems} active={this.state.active} select={this.selectInvite}/>
-		</div>
-		<div className="col-md-8">
-		<Invite invite={this.state.active ? this.state.invites[this.state.active] : undefined} />
-		</div>
+		<div className="invites">
+		<widgets.List items={listElems} active={this.state.active} select={this.selectInvite} className="col-md-4 col-container-12 ui-scroll"/>
+		<Invite className="col-md-8 col-container-12" invite={this.state.active ? this.state.invites[this.state.active] : undefined} />
 		</div>);
 	    
 	}

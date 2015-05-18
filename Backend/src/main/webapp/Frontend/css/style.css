@@ -138,8 +138,14 @@ h3{
     font-size: 15px;
 }
 
+.taskAddrs{
+    
+    font-size: 9px;
+    padding: 5px;
+}
+
 .container-body{
-    height: 400px;
+    height: 600px;
 }
 
 .container-body > *{
@@ -153,4 +159,10 @@ h3{
 
 .list-group{
 
+}
+
+.qr-code > img{
+
+    margin-left: auto;
+    margin-right: auto;
 }
