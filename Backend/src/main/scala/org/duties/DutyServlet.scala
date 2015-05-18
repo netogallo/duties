@@ -175,12 +175,12 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     }
   }
   
-  get("/address/form") { 
+  post("/address/form") { 
     val u = requireAuth
     taskOutput(params("json"), u) 
   }
 
-  get("/address"){ 
+  post("/address"){ 
     val u = requireAuth
     taskOutput(request.body, u) 
   }  

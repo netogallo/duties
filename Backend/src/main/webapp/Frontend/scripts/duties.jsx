@@ -113,20 +113,20 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    return hs.find(
 		function(username){
 		    return username == server.getLoggedUser().username;}
-		,this.props.task.reports);
+		,this.props.task.reported_by);
 	},
 
 	handleReport: function(e){
 	    
-	    var reports;
+	    var reported_by;
 	    var self = this;
 	    var logged = server.getLoggedUser();
 	    if(this.isReported())
-		reports = hs.filter(function(user){return user != logged.username},this.props.task.votes);
+		reported_by = hs.filter(function(user){return user != logged.username},this.props.task.votes);
 	    else
-		reports = hs.concat([[logged.username],this.props.task.reports]);
+		reported_by = hs.concat([[logged.username],this.props.task.reported_by]);
 	    
-	    this.props.task.update({reports: reports});
+	    this.props.task.update({reported_by: reported_by});
 	},
 	
 	render: function(){
@@ -135,7 +135,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	    var reportBtnCss = ["label"];
 
-	    if(this.props.total && this.props.total / 2 <= this.props.task.reports.length)
+	    if(this.props.total && this.props.total / 2 <= this.props.task.reported_by.length)
 		reportBtnCss.push("label-warning");
 	    else
 		reportBtnCss.push("label-success");
@@ -157,7 +157,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    </div>
 		    <div className="taskBody taskEmptyBody">
 		    <div className="taskStatus">
-		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.reports.length}</span></span>
+		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.reported_by.length}</span></span>
 		    &nbsp;
 		    <span className="label label-info">{this.props.task.entrusted}</span>
 		    &nbsp;
@@ -374,7 +374,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	render: function(){
 	    var self = this;
 
-	    var reports = {};
+	    var reported_by = {};
 	    var penalty = {};
 
 	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
@@ -383,14 +383,14 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	    hs.map(
 		function(task){
-		    reports[task.task_id] = task.reports;
+		    reported_by[task.task_id] = task.reported_by;
 		},
 		this.props.duty ? this.props.duty.tasks : []);
 
 	    hs.map(
 		function(user){		
 		    var loss = hs.fold(function(s,task){
-			if(task.entrusted == user.username && self.props.duty.participants.length / 2 <= reports[task.task_id].length)
+			if(task.entrusted == user.username && self.props.duty.participants.length / 2 <= reported_by[task.task_id].length)
 			    return s - task.penalty;
 			else
 			    return s;
@@ -408,7 +408,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    description: taskProps.task_description,
 		    penalty: taskProps.task_penalty,
 		    recurrent: false,
-		    reports: []
+		    reported_by: []
 		});
 
 		self.props.duty.update({tasks: hs.concat([[task],self.props.duty.tasks])});
@@ -586,7 +586,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
       }
     */	    
 
-    var tasks = hs.map(defs.TaskS.create,[{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, reports: []}]);
+    var tasks = hs.map(defs.TaskS.create,[{name: "Task", entrusted: "user2", description: "Task description", penalty: 50, reported_by: []}]);
     var users = [{username: "user1"},{username: "user2"}]; //hs.map(validator(schema.User),[{username: "user1"},{username: "user2"}]);
     var duties = hs.map(defs.DutyS.create,[{name: "duty1", participants: users, tasks: tasks},{name: "duty2", participants: users, tasks:[]}]);
     
