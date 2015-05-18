@@ -97,7 +97,10 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
 
   post("/user/form") {
-    mk[User](params("json"), Users)
+    val json = params("json")
+    val u = read[User](json)
+    if (Users.exists(u.toIdent)) mkError("User already exists")
+    else mk[User](json, Users)
   }
 
   post("/task/form") {
@@ -122,7 +125,10 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
   
   post("/user") { 
-    mk[User](request.body, Users) 
+    val json = request.body
+    val u = read[User](json)
+    if (Users.exists(u.toIdent)) mkError("User already exists")
+    else mk[User](json, Users)
   }
   
   post("/login") {

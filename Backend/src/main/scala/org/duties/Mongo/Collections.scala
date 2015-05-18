@@ -176,6 +176,14 @@ object Mongo {
       import com.roundeights.hasher.Implicits._
       import scala.language.postfixOps
       override def name = "users"
+      def find(uid: UserIdent): Option[User] = {
+        val q = UserIdents.toMongo(uid)
+        val o = Option(db.getCollection(name).findOne(q))
+        o.map(fromMongo)
+      }
+      
+      def exists(uid: UserIdent) = find(uid).isDefined
+
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val unencrypted = super.toMongo(u)
         unencrypted.update("password", u.asInstanceOf[User].password.sha256.hex)
@@ -237,8 +245,9 @@ object Mongo {
     }
 
     implicit object UserIdents extends Collections[UserIdent] {
-      def name = "unpersisted"      
+      def name = "unpersisted"       
       def fromMongo(o: DBObject) = UserIdent(username = o.as[String]("username"))
+      def toMongo(uid: UserIdent) = DBObject("username" -> uid.username)
     }
 
     implicit object TaskRefs extends Collections[TaskRef] with MongoClient {
