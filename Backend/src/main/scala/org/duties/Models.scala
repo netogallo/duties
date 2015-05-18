@@ -20,7 +20,9 @@ object Models {
     def is_paid = entrusted.isDefined
   }
   case class Duty(author: UserIdent, name: String, participants: Seq[UserIdent], tasks: Seq[Task], id: String = (new ObjectId().toString())) 
-  case class User(username: String, password: String, id: String = (new ObjectId().toString()))
+  case class User(username: String, password: String, id: String = (new ObjectId().toString())) {
+    def toIdent: UserIdent = UserIdent(username)
+  }
   case class UserIdent(username: String)
   case class TaskRef(task_id: String, duty_id: Option[String] = None)  
   case class TaskOutput(owner: UserIdent, task: TaskRef, btc_address: String)
