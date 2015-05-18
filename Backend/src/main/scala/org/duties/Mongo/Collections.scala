@@ -314,6 +314,11 @@ object Mongo {
         val q = MongoDBObject("task" -> TaskRefs.toMongo(taskRef))        
         db.getCollection(name).find(q).toArray().map(fromMongo)        
       }
+      def remove(taskRef: TaskRef, uid: UserIdent): Int = {
+        val q = MongoDBObject("task" -> TaskRefs.toMongo(taskRef))
+        val result = db.getCollection(name).remove(q)
+        result.getN
+      }
       override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
         val report = super.toMongo(u)
         val r = u.asInstanceOf[Report]

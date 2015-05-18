@@ -70,12 +70,25 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     val rep: Report = read[Report](json)    
     val ref: Option[TaskRef] = TaskRefs.find(rep.task.task_id)   
     val task: Option[Task] = ref.flatMap(Tasks.fromRef)
+    val taskReports: Seq[Report] = ref.map(Reports.findReports).getOrElse(Nil)
+    val previousReport = taskReports.find(_.reporter == rep.reporter)
 
+//task.map(t => t.reported_by.contains(rep.reporter))
     if (!task.isDefined) mkError("This task doesn't exist: " + rep.task.task_id)
+    if (previousReport.isDefined) {
+      //mkError("This task is reported by you");
+      Reports.remove(ref.get, rep.reporter)
+      val reportsNow = ref.map(Reports.findReports).getOrElse(Nil)
+      write(reportsNow)
+    }
     //todo: check if state is entrusted
     //todo: check if reporter is owner
     //if (!task.get.is_paid) mkError("This task is not paid or entrusted")
-    else mk[Report](rep.copy(task = ref.get), Reports)
+    else {
+      mk[Report](rep.copy(task = ref.get), Reports)
+      val reportsNow = ref.map(Reports.findReports).getOrElse(Nil)
+      write(reportsNow)
+    }
   } catch renderUnprocessable
 
   // create by forms
