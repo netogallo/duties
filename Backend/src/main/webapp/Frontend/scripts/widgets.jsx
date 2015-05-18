@@ -38,17 +38,22 @@ define(["defs","util","hs"],function(defs,util,hs){
 		<label htmlFor="suggest-text">Search User</label>
 		<input name="suggest-text" id="suggest-text" onChange={this.onChange} type="text"/>
 		<div className="selection-box">
+		    <h4>Selected Participants</h4>
+		<div>
 		{this.props.sig.selection.map(
 		    function(elem){
 			return (<button type="button" className="btn btn-default"> {elem.str} </button>);
 		    })}
 		</div>
+		</div>
 		<div className="suggest-box">
+		    <h4>Available Users</h4>
+		<div>
 		{this.props.sig.suggestions.map(
 		    function(elem){
-			console.log(elem);
 			return (<button type="button" onClick={self.onClick(self)(elem)} className="btn btn-default">{elem.str}</button>);
 		    })}
+		</div>
 		</div>
 		</div>);
 	}
@@ -66,22 +71,46 @@ define(["defs","util","hs"],function(defs,util,hs){
 	},
 
 	render: function(){
+	    var self = this;
 	    var task = this.props.task.value;
-	    console.log("status",this.props.task.status);
+	    console.log("addr",self.props.address);
+	    setTimeout(function(){
+		if(!self.qrCode && self.props.address)
+		    self.qrCode = new QRCode(
+			"qr-"+self.props.address,
+			{
+			    text: self.props.address,
+			    width: 128,
+			    height: 128
+			});
+	    },
+		       100);
+
+	    var addr = this.props.address ? (
+		<div className="taskAddrs">
+		    <div className="qr-code" id={"qr-"+this.props.address}>
+		    </div>
+		    {this.props.address}
+		</div>
+	    ) : <div></div>;
+
 	    return (
-		<div className="task col-md-4">
+		<div className={"task col-md-4 " + this.props.className}>
+
 		<div className="taskHead">
 		<h3><input onChange={this.onChange} type="checkbox" checked={this.props.task.status}></input>{task.name}</h3>
 		</div>
-		<div className="taskAddrs">
-		{this.props.address}
-		</div>
+
 		<div className="taskBody">
+
 		<div className="taskStatus">
-		<span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>
-		&nbsp;
-		<span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{task.penalty}</span>
+		    <span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>
+		    &nbsp;
+		    <span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{task.penalty}</span>
 		</div>
+
+		{addr}
+
 		<div className="description">
 		{task.description}
 		</div>
@@ -112,7 +141,7 @@ define(["defs","util","hs"],function(defs,util,hs){
 	    var self = this;
 
 	    return (
-		<div className="widget-list list-group">
+		<div className={"widget-list list-group " + this.props.className}>
 		{vals.map(function(d){
 		    var classes=["list-group-item"];
 		    if(d.key==self.props.active){
