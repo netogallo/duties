@@ -73,6 +73,9 @@ define(["defs","util","hs"],function(defs,util,hs){
 		<div className="taskHead">
 		<h3><input onChange={this.onChange} type="checkbox" checked={this.props.task.status}></input>{task.name}</h3>
 		</div>
+		<div className="taskAddrs">
+		{this.props.address}
+		</div>
 		<div className="taskBody">
 		<div className="taskStatus">
 		<span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>

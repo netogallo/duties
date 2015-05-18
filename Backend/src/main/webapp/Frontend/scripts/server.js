@@ -67,6 +67,8 @@ define(["hs"],function(hs){
 	    dutiesReq: req(hostname + "/duties"),
 	    duty: hostname + "/duty",
 	    dutyReq: req(hostname + "/duty"),
+	    address: hostname + "/address",
+	    addressReq: req(hostname + "/address"),
 	    getUsers: function(query,cb){
 		console.log("get users");
 		if(users)

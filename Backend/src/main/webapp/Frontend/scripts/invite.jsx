@@ -4,9 +4,25 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 
     var Invite = React.createClass({
 
+	loadBtcAddress: function(){
+
+	    if(this.props.invite)
+	    for(var task in this.props.invite.tasks){
+		server.api.addressReq({
+		    //type: 'GET',
+		    data: {task_id: this.props.invite.tasks[task].id}
+		})
+		.done(function(addr){
+		    this.state.addrs[this.props.invite.tasks[task]] = addr.btc_address;
+		    this.setState({addrs: this.state.addrs});
+		});
+	    }
+	},
+
 	getInitialState: function(){
 	    var invite = this.props.invite;
 	    var self = this;
+	    this.loadBtcAddress();
 
 	    /*
 	    for(var task in invite.tasks){
@@ -17,17 +33,28 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			self.setState({x:'y'});});
 	    }*/
 	    
-	    return {invite: invite};
+	    return {invite: invite, tasks: [], addrs: []};
 	},
 
 	render: function(){
-
-	    if(this.props.invite)
+	    var self = this;
+	    
+	    if(this.props.invite){
+		this.loadBtcAddress();
+		var tasks = hs.map(
+		    function(task){
+			if(!self.state.tasks[task]){
+			    self.state.tasks[task] = defs.CheckS.create({status: false, value: task});
+			}
+			return self.state.tasks[task];
+		    },this.props.invite.tasks);
+			    
+		
 		return (
 		    <div className="invite">
 		    <div className="participants">
 		    <h4>Participants</h4>
-		    {this.state.invite.duty.participants.map(
+		    {this.props.invite.duty.participants.map(
 			function(p){
 			    return (
 				<span className="label label-info label-participant">
@@ -38,14 +65,15 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		    <div className="available-tasks">
 		    <h4>Available Tasks</h4>
 		    <div className="checkbox">
-		    {this.state.invite.tasks.map(function(task){
-			return (<InviteTask task={task} />);
+		    {tasks.map(function(task){
+			console.log(task);
+			return (<InviteTask task={task} address={self.state.addrs[task]} />);
 	            })}
 		    </div>
 		    </div>
 		    </div>
 		);
-	    else
+	    }else
 		return (<div className="invite"></div>);
 	}
     });
@@ -76,7 +104,6 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 				},
 				tasks);
 			    if(task_){
-				invites[invite].duty = {id: invites[invite].tasks[task].duty_id};
 				invites[invite].tasks[task] = task_;
 			    }else
 				console.log("Bad Ref",invites[invite].tasks[task]);
@@ -102,10 +129,11 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 	render: function(){
 
 	    var listElems = hs.map(
-		function(x){		    
+		function(x){
+		    console.log(x);
 		    return (
 			<div className="invite-sel">
-			{x.duty.id}
+			{x.duty.name}
 			</div>
 		    );
 		},
@@ -118,7 +146,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		<widgets.List items={listElems} active={this.state.active} select={this.selectInvite}/>
 		</div>
 		<div className="col-md-8">
-		<Invite invite={this.state.active ? this.props.invites[this.state.active] : undefined} />
+		<Invite invite={this.state.active ? this.state.invites[this.state.active] : undefined} />
 		</div>
 		</div>);
 	    
