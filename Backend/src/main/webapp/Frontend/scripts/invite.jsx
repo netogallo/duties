@@ -121,7 +121,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			}
 		    }
 		    console.log(invites);
-		    self.setState({invites: invites});
+		    self.setState({invites: hs.filter(function(i){return i.duty;},invites)});
 		});
 	    })
 	},
