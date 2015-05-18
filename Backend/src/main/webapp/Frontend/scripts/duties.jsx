@@ -263,7 +263,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
     var DutyInvite = React.createClass({
 	getInitialState: function(){
 
-	    return {participants: [],tasks: {}};
+	    return {participants: {},tasks: {}};
 	},
 
 	toggle: hs.curry(function(self,elem,collection,event){
@@ -316,11 +316,11 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    console.log("sap",tasks[1]);
 
 	    var participants = hs.map(function(ps){
-		if(!self.state.participants[ps]){
-		    self.state.participants[ps] = defs.CheckS.create({status: false, value: ps});
-		    self.state.participants[ps].setUpdate(function(){self.setState({x:'y'});});
+		if(!self.state.participants[ps.username]){
+		    self.state.participants[ps.username] = defs.CheckS.create({status: false, value: ps});
+		    self.state.participants[ps.username].setUpdate(function(){self.setState({x:'y'});});
 		}
-		return self.state.participants[ps];
+		return self.state.participants[ps.username];
 	    },
 		this.props.duty ? this.props.duty.participants : []);
 
