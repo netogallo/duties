@@ -29,6 +29,14 @@ define(["hs"],function(hs){
 
     var currUser;
 
+    req(hostname + "/me",{type: 'GET'})
+    .done(function(me){
+	currUser = me;
+	for(cb in onLogin){
+	    onLogin[cb](currUser,"");
+	}
+    });
+
     var loginReq = function(conf){
 
 	var data = conf.data;
@@ -94,6 +102,8 @@ define(["hs"],function(hs){
 	onLogin: function(cb){
 
 	    onLogin.push(cb);
+	    if(currUser)
+		cb(currUser,"");
 	},
 
 	onLogout: function(cb){
@@ -104,11 +114,6 @@ define(["hs"],function(hs){
 	    
 	},
 	
-	saveDuty: function(duty,cb){
-
-	    cb({});
-	},
-
 	getLoggedUser: function(){
 
 	    return {

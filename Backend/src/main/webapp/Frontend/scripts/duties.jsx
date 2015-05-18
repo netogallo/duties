@@ -64,7 +64,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    
 		    task_name: $('input[name="task-name"]').val(),
 		    task_description: $('input[name="task-description"]').val(),
-		    task_penalty: parseInt($('input[name="task-penalty"]').val())
+		    task_penalty: parseFloat($('input[name="task-penalty"]').val())
 		}]);
 	    }
 	},
@@ -397,19 +397,24 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	},
 
 	saveDuty: function(e){
-
-	    var duty = this.props.duty.restore();
-	    duty.author = server.getUser();
-	    duty.unsaved = undefined;
-	    server.api.dutyReq({data: duty})
-	    .done(function(data){
-		console.log("good");
-		console.log(data);
-	    })
-	    .fail(function(data){
-		console.log("fail");
-		console.log(data);
-	    });
+	    var self = this;
+	    if(!self.saving){
+		self.saving = true;
+		var duty = this.props.duty.restore();
+		duty.author = server.getUser();
+		server.api.dutyReq({data: duty, dataType: "* text"})
+		.done(function(data){
+		    console.log("good");
+		    console.log(data);
+		    self.saving = false;
+		    self.props.duty.update({unsaved: false});
+		})
+		.fail(function(data){
+		    console.log("fail");
+		    console.log(data);
+		    self.saving = false;
+		});
+	    }
 		
 	},
 	
@@ -582,20 +587,14 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		tasks: [],
 		unsaved: true
 	    };
-
-	    server.saveDuty(duty,function(result){
-
-		if(!result.error){
-
-		    var dutyS = defs.DutyS.create(duty);
-
-		    dutyS.setUpdate(function(){
-			self.setState({x:'y'});
-		    });
-
-		    self.setState({duties: hs.concat([[dutyS],self.state.duties])});
-		}
+	    
+	    var dutyS = defs.DutyS.create(duty);
+	    
+	    dutyS.setUpdate(function(){
+		self.setState({x:'y'});
 	    });
+
+	    self.setState({duties: hs.concat([[dutyS],self.state.duties])});
 	},
 
 	render: function(){
