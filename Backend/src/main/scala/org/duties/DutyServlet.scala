@@ -22,7 +22,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   get("/admin") { admin } 
 
   //creates task refs and generates addreses for each user
-  def mkDuty(in: String) = {
+  def mkDuty(in: String) = try {
     val uid = requireAuth
     val duty = read[Duty](in)
     val isAuthor = uid.username == duty.author.username
@@ -32,7 +32,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     else 
       if (!isAuthor) mkError("Author must be logged")
       else mk[Duty](duty, Duties)
-  }
+  } catch renderUnprocessable
   
   //author must be logged in
   //every task must exist

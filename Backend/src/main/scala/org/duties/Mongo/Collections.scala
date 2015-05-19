@@ -97,13 +97,21 @@ object Mongo {
         val tasks: Option[Seq[Task]] = d.map(duty => duty.tasks)
         val t = tasks.flatMap(t => t.find(task => task.id == r.task_id))
         t
-      }      
+      } 
+      override def toMongo[U](u: U)(implicit tag: TypeTag[U]): MongoDBObject = {
+        val task = super.toMongo(u)
+        val t = u.asInstanceOf[Task]
+        if (t.entrusted.isDefined)
+          task.update("entrusted", UserIdents.toMongo(t.entrusted.get))         
+        task
+      }
+
       override def fromMongo(o: DBObject): Task = {
         val tid = o.as[String]("_id")        
         val ref = TaskRefs.find(tid)
         val reports: Seq[Report] = ref.map(Reports.findReports).getOrElse(Nil)
         val uids = reports.map(_.reporter)
-        
+
         val updatedTask = new Task(
           name = o.as[String]("name"),
           description = Option(o.as[String]("description")),
