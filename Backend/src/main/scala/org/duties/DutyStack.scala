@@ -9,8 +9,9 @@ import javax.servlet.http.HttpServletRequest
 import collection.mutable
 
 //json
-import org.json4s.{NoTypeHints,Formats, MappingException}
+import org.json4s.{DefaultFormats, NoTypeHints,Formats, MappingException}
 import org.json4s.jackson.Serialization
+import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.{read, write}
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
@@ -33,7 +34,7 @@ import scala.language.postfixOps
 import Auth._
 
 trait DutyStack extends ScalatraServlet with ScalateSupport with MongoClient {
-  implicit val formats = Serialization.formats(NoTypeHints)
+  implicit val formats = DefaultFormats.withBigDecimal
   
   /* error response */
   case class Error(error: String)
