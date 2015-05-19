@@ -7,6 +7,7 @@ import Mongo.Collections._
 //hasher
 import com.roundeights.hasher.Implicits._
 import scala.language.postfixOps
+import java.util.Calendar
 
 trait Homepage {
   this: DutyStack with Captchas => 
@@ -20,7 +21,9 @@ trait Homepage {
     session.put("captcha", captcha)    
     
     val hashedPw = "pw".sha256.hex
-    val task = Task(penalty = 1.5d, name = "My task", recurrent = false)
+    val now = Calendar.getInstance.getTimeInMillis()
+    val tenMinutes = 10 * 60 * 1000;
+    val task = Task(penalty = 1.5d, name = "My task", expiry_epoch = now + tenMinutes, recurrent = false)
     val duty = Duty(kmels, "Our big duty", Seq(netogallo, kmels), Seq(task))
 
     def loggedUser = maybeAuth

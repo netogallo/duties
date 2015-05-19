@@ -61,12 +61,10 @@
 		"description": "Users who claim the task was not completed.",
 		"items": {"type": "string"}
 	    },
-
-	    "duration": {
+	    "expiry_epoch": {
 		"type": "number",
-		"description": "Hours to complete the task"
-	    },
-
+		"description": "Number of milliseconds after January 1, 1970 (midnight UTC/GMT), time at which the task expires"
+	    },        
 	    "state": {
 		"type": "object",
 		"properties": {

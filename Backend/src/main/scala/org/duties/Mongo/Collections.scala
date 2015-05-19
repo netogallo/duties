@@ -110,7 +110,8 @@ object Mongo {
             val xx = ref.map(Payments.findPayments).getOrElse(Nil)
             println("Found payments: " +xx.mkString(","))
             xx
-          }
+          },
+          expiry_epoch = o.as[Long]("expiry_epoch")
         )
       }
     }
