@@ -490,7 +490,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    <div className="ui-scroll duty-body col-container-8">
 		    <div className="participants">
 		    {this.props.duty.participants.map(function(participant){
-			return (<span className="label label-info"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{penalty[participant.username] ? penalty[participant.username] : 0}</span></span>);
+			return (<span className="label label-info label-participant"><span>{participant.username}</span> <span className="glyphicon btc-curr">&nbsp;</span><span>{penalty[participant.username] ? penalty[participant.username] : 0}</span></span>);
 		    })}
 		    </div>
 		    

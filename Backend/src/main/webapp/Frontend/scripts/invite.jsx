@@ -55,7 +55,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 		return (
 		    <div className={"invite " + this.props.className}>
 			<div className="col-container-1">
-			<h4>{this.props.invite.duty.name}</h4>
+			<h3>{this.props.invite.duty.name}</h3>
 			</div>
 
 			<div className="invite-body col-container-10 ui-scroll">

@@ -73,26 +73,35 @@ define(["defs","util","hs"],function(defs,util,hs){
 	render: function(){
 	    var self = this;
 	    var task = this.props.task.value;
-	    if(!self.state.addrs[self.props.address])
-		self.state.addrs[self.props.address] = <div className="qr-code" id={"qr-"+self.props.address}></div>;
+
 	    setTimeout(function(){
-		if(!self.state.addrs_id[self.props.address]){
-		    self.state.addrs_id[self.props.address] = true;
-			new QRCode(
-			"qr-"+self.props.address,
+		if(!self.state.addrs[self.props.address]){
+		    console.log("state",self.state.addrs[self.props.address]);
+		    self.state.addrs[self.props.address] = true;
+		    $('#qr-place').append('<div id="raw-'+self.props.address+'">');
+		    new QRCode(
+			"raw-"+self.props.address,
 			{
 			    text: self.props.address,
 			    width: 128,
 			    height: 128
 			});
+		    setTimeout(function(){
+			var codes = $('#raw-' + self.props.address + ' > img');
+			self.state.addrs[self.props.address] = codes.attr('src');
+			self.setState({addrs: self.state.addrs});
+			console.log("state",self.state.addrs);
+		    },100);
 		}
-	    },
-		       100);
+	    },100);
 
 	    var addr = this.props.address ? (
 		<div className="taskAddrs">
-		    {self.state.addrs[self.props.address]}
-		    {self.props.address}
+		 <div className="qr-code" id={"qr-"+self.props.address}>
+		    {self.state.addrs[self.props.address] ? <span><img src={self.state.addrs[self.props.address]} /></span> : <span></span>}
+		    
+		 </div>
+		 {self.props.address}
 		</div>
 	    ) : <div></div>;
 
