@@ -66,13 +66,14 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    
 		    task_name: $('input[name="task-name"]').val(),
 		    task_description: $('input[name="task-description"]').val(),
-		    task_penalty: parseFloat($('input[name="task-penalty"]').val())
+		    task_penalty: parseFloat($('input[name="task-penalty"]').val()),
+		    task_expires: this.currDate ? this.currDate.getTime() : (new Date()).getTime()
 		}]);
 	    }
 	},
 
 	render: function(){
-	    
+	    var self = this;
 	    return (
 		<div className={this.props.className}>
 		<form onSubmit={this.saveTask}>
@@ -82,6 +83,8 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<input type="text" id="task-description" className="form-control" name="task-description"></input>
 		<label htmlFor="task-penalty">Penalty</label>
 		<input type="text" id="task-penalty" className="form-control" name="task-penalty"></input>
+		<label htmlFor="task-expires">Expiration Date</label>
+                <widgets.JQueryC elem={<div id="task-expires"></div>} onRender={function(){$('#task-expires').datepicker().on('changeDate', function(d){self.currDate = d.date;}) }}/>
 		<input type="submit" className="form-control" value="Create Task"></input>
 		</form>
 		</div>
@@ -180,11 +183,14 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    </div>
 		    <div className="taskBody taskEmptyBody">
 		    <div className="taskStatus status-holder">
+		    &nbsp;
 		    <span className={hs.unwords(reportBtnCss)}>Reports <span className="badge">{this.props.task.reported_by.length}</span></span>
 		    &nbsp;
 		    <span className="label label-info">{this.props.task.entrusted}</span>
 		    &nbsp;
 		    <span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{this.props.task.penalty}</span>
+	            &nbsp;
+                    <span className="label label-info"><span className=" glyphicon glyphicon-time"></span>&nbsp;{(new Date(this.props.task.expiry_epoch)).toDateString()}</span>
 		    </div>
 		    <div className="description">
 		    {this.props.task.description}
@@ -303,7 +309,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    var self = this;
 	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
 	    //var boundTasks = tasks[0];
-
+	    console.log('tasks',tasks);
 	    var freeTasks = hs.map(function(t){
 		if(!self.state.tasks[t.id]){
 		    self.state.tasks[t.id] = defs.CheckS.create({status: false, value: t});
@@ -312,8 +318,6 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		return self.state.tasks[t.id];
 	    },
 		tasks[1]);
-
-	    console.log("sap",tasks[1]);
 
 	    var participants = hs.map(function(ps){
 		if(!self.state.participants[ps.username]){
@@ -401,6 +405,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		.fail(function(data){
 		    console.log("fail");
 		    console.log(data);
+		    self.props.duty.update({unsaved: false});
 		    self.saving = false;
 		});
 	    }
@@ -444,7 +449,8 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    description: taskProps.task_description,
 		    penalty: taskProps.task_penalty,
 		    recurrent: false,
-		    reported_by: []
+		    reported_by: [],
+		    expiry_epoch: taskProps.task_expires,
 		});
 
 		self.props.duty.update({tasks: hs.concat([[task],self.props.duty.tasks])});
@@ -584,7 +590,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		self.setState({x:'y'});
 	    });
 
-	    self.setState({duties: hs.concat([[dutyS],self.state.duties])});
+	    self.setState({duty: dutyS, duties: hs.concat([[dutyS],self.state.duties])});
 	    $('#duty-edit').modal('hide');
 	},
 

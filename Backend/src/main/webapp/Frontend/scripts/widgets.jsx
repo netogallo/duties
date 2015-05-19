@@ -1,5 +1,22 @@
 define(["defs","util","hs","qr"],function(defs,util,hs,qr){
 
+    var JQueryC = React.createClass({
+
+	getInitialState: function(){
+	    return {rendered: false};
+	},
+
+	render: function(){
+
+	    if(!this.state.rendered){
+		this.state.rendered = true;
+		setTimeout(this.props.onRender,200);
+	    }
+
+	    return this.props.elem;
+	}
+    });
+
     var Search = React.createClass({
 
 	onChange: function(event){
@@ -103,6 +120,8 @@ define(["defs","util","hs","qr"],function(defs,util,hs,qr){
 		    <span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>
 		    &nbsp;
 		    <span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{task.penalty}</span>
+		    &nbsp;
+		    <span className="label label-info"><span className=" glyphicon glyphicon-time"></span>&nbsp;{(new Date(task.expiry_epoch)).toDateString()}</span>
 		</div>
 
 		{addr}
@@ -155,6 +174,7 @@ define(["defs","util","hs","qr"],function(defs,util,hs,qr){
     return {
 	List: List,
 	InviteTask: InviteTask,
-	Search: Search
+	Search: Search,
+	JQueryC: JQueryC
     };
 });
