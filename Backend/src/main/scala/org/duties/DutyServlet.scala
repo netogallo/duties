@@ -75,16 +75,18 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
 
 //task.map(t => t.reported_by.contains(rep.reporter))
     if (!task.isDefined) mkError("This task doesn't exist: " + rep.task.task_id)
+    else
     if (previousReport.isDefined) {
       //mkError("This task is reported by you");
       Reports.remove(ref.get, rep.reporter)
       val reportsNow = ref.map(Reports.findReports).getOrElse(Nil)
       write(reportsNow)
     }
-    //todo: check if state is entrusted
-    //todo: check if reporter is owner
-    //if (!task.get.is_paid) mkError("This task is not paid or entrusted")
-    else {
+    else
+    if (!task.get.entrusted.isDefined) mkError("You can report a task only if it's entrusted.")
+    else
+    if (task.get.entrusted.get == rep.reporter.username) mkError("You can't report your entrusted task. Come on, it will eventually expire!")
+    else {      
       mk[Report](rep.copy(task = ref.get), Reports)
       val reportsNow = ref.map(Reports.findReports).getOrElse(Nil)
       write(reportsNow)
