@@ -444,6 +444,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    var taskSave = function(taskProps){
 		
 		var task = defs.TaskS.create({
+		    id: Math.random()*100000000000000000 + '',
 		    name: taskProps.task_name,
 		    //entrusted: "",
 		    description: taskProps.task_description,
