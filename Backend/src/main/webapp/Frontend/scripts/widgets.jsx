@@ -1,4 +1,21 @@
-define(["defs","util","hs"],function(defs,util,hs){
+define(["defs","util","hs","qr"],function(defs,util,hs,qr){
+
+    var JQueryC = React.createClass({
+
+	getInitialState: function(){
+	    return {rendered: false};
+	},
+
+	render: function(){
+
+	    if(!this.state.rendered){
+		this.state.rendered = true;
+		setTimeout(this.props.onRender,200);
+	    }
+
+	    return this.props.elem;
+	}
+    });
 
     var Search = React.createClass({
 
@@ -62,7 +79,12 @@ define(["defs","util","hs"],function(defs,util,hs){
     var InviteTask = React.createClass({
 	
 	getInitialState: function(){
-	    return {selected: this.props.selected ? true : false,addrs: {},addrs_id: {}};
+	    
+	    return {
+		selected: this.props.selected ? true : false,
+		addrs: {},
+		qrPre : 'qr-' + Math.floor(Math.random()*10000000) + '-'
+	    };
 	},
 
 	onChange: function(value){
@@ -73,26 +95,13 @@ define(["defs","util","hs"],function(defs,util,hs){
 	render: function(){
 	    var self = this;
 	    var task = this.props.task.value;
-	    if(!self.state.addrs[self.props.address])
-		self.state.addrs[self.props.address] = <div className="qr-code" id={"qr-"+self.props.address}></div>;
-	    setTimeout(function(){
-		if(!self.state.addrs_id[self.props.address]){
-		    self.state.addrs_id[self.props.address] = true;
-			new QRCode(
-			"qr-"+self.props.address,
-			{
-			    text: self.props.address,
-			    width: 128,
-			    height: 128
-			});
-		}
-	    },
-		       100);
 
 	    var addr = this.props.address ? (
 		<div className="taskAddrs">
-		    {self.state.addrs[self.props.address]}
-		    {self.props.address}
+		 <div className="qr-code" >
+		    {self.props.address ? <span><img src={qr.mkQR(this.props.address)}></img></span> : <span></span>}
+		 </div>
+		 {self.props.address}
 		</div>
 	    ) : <div></div>;
 
@@ -100,7 +109,9 @@ define(["defs","util","hs"],function(defs,util,hs){
 		<div className={"task col-md-4 " + this.props.className}>
 
 		<div className="taskHead">
-		<h3><input onChange={this.onChange} type="checkbox" checked={this.props.task.status}></input>{task.name}</h3>
+		<h3>
+		    {self.props.noCheck ? "" : <input onChange={this.onChange} type="checkbox" checked={this.props.task.status}></input>}
+		    {task.name}</h3>
 		</div>
 
 		<div className="taskBody">
@@ -109,6 +120,8 @@ define(["defs","util","hs"],function(defs,util,hs){
 		    <span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>
 		    &nbsp;
 		    <span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{task.penalty}</span>
+		    &nbsp;
+		    <span className="label label-info"><span className=" glyphicon glyphicon-time"></span>&nbsp;{(new Date(task.expiry_epoch)).toDateString()}</span>
 		</div>
 
 		{addr}
@@ -161,6 +174,7 @@ define(["defs","util","hs"],function(defs,util,hs){
     return {
 	List: List,
 	InviteTask: InviteTask,
-	Search: Search
+	Search: Search,
+	JQueryC: JQueryC
     };
 });

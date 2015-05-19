@@ -16,7 +16,8 @@ define(["signal","hs"],function(signal,hs){
 	recurrent: {type: Types.prim},
 	state: {type: Types.prim},
 	reported_by: {type: Types.prim},
-	payments: {type: Types.prim}
+	payments: {type: Types.prim},
+	expiry_epoch: {type: Types.prim}
     });
 
     var DutyS = Signal({

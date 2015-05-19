@@ -99,6 +99,8 @@ h3{
 .status-holder{
     padding-top: 5px;
     padding-bottom: 5px;
+    word-wrap: break-word;
+    line-height: 25px;
 }
 
 .with-floats{
@@ -161,8 +163,7 @@ h3{
 
 }
 
-.qr-code > img{
+.qr-code > span{
 
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 30px;
 }

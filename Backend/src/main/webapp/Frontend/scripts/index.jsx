@@ -9,9 +9,13 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 	    {json: JSON.stringify({
 		username: $('input[name="email"]').val(),
 		password: $('input[name="password"]').val(),
+		btc_address: $('input[name="btc_address"]').val()
 	    })})
 	    .done(function(data){
-		ui.alertSuccess("Account has been created!");
+		if(data.error)
+		    ui.alertError(data.error);
+		else 
+		    ui.alertSuccess("Account has been created!");
 	    })
 	    .fail(function(data){
 		ui.alertError("The username already exists!");
@@ -27,6 +31,8 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 		<input type="text" id="email" className="form-control" name="email"></input>
 		<label htmlFor="password">Password</label>
 		<input type="password" id="password" className="form-control" name="password"></input>
+		<label htmlFor="btc_address">Bitcoin Address</label>
+		<input type="text" id="btc_address" className="form-control" name="btc_address"></input>
 		<input className="btn btn-default" type="submit" value="Create User"></input>
 		</form>
 		</div>);
