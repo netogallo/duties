@@ -62,7 +62,7 @@ define(["defs","util","hs"],function(defs,util,hs){
     var InviteTask = React.createClass({
 	
 	getInitialState: function(){
-	    return {selected: this.props.selected ? true : false};
+	    return {selected: this.props.selected ? true : false,addrs: {},addrs_id: {}};
 	},
 
 	onChange: function(value){
@@ -73,24 +73,26 @@ define(["defs","util","hs"],function(defs,util,hs){
 	render: function(){
 	    var self = this;
 	    var task = this.props.task.value;
-	    console.log("addr",self.props.address);
+	    if(!self.state.addrs[self.props.address])
+		self.state.addrs[self.props.address] = <div className="qr-code" id={"qr-"+self.props.address}></div>;
 	    setTimeout(function(){
-		if(!self.qrCode && self.props.address)
-		    self.qrCode = new QRCode(
+		if(!self.state.addrs_id[self.props.address]){
+		    self.state.addrs_id[self.props.address] = true;
+			new QRCode(
 			"qr-"+self.props.address,
 			{
 			    text: self.props.address,
 			    width: 128,
 			    height: 128
 			});
+		}
 	    },
 		       100);
 
 	    var addr = this.props.address ? (
 		<div className="taskAddrs">
-		    <div className="qr-code" id={"qr-"+this.props.address}>
-		    </div>
-		    {this.props.address}
+		    {self.state.addrs[self.props.address]}
+		    {self.props.address}
 		</div>
 	    ) : <div></div>;
 
