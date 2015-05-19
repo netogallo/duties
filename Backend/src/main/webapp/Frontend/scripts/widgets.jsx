@@ -1,4 +1,4 @@
-define(["defs","util","hs"],function(defs,util,hs){
+define(["defs","util","hs","qr"],function(defs,util,hs,qr){
 
     var Search = React.createClass({
 
@@ -62,7 +62,12 @@ define(["defs","util","hs"],function(defs,util,hs){
     var InviteTask = React.createClass({
 	
 	getInitialState: function(){
-	    return {selected: this.props.selected ? true : false,addrs: {},addrs_id: {}};
+	    
+	    return {
+		selected: this.props.selected ? true : false,
+		addrs: {},
+		qrPre : 'qr-' + Math.floor(Math.random()*10000000) + '-'
+	    };
 	},
 
 	onChange: function(value){
@@ -74,32 +79,10 @@ define(["defs","util","hs"],function(defs,util,hs){
 	    var self = this;
 	    var task = this.props.task.value;
 
-	    setTimeout(function(){
-		if(!self.state.addrs[self.props.address]){
-		    console.log("state",self.state.addrs[self.props.address]);
-		    self.state.addrs[self.props.address] = true;
-		    $('#qr-place').append('<div id="raw-'+self.props.address+'">');
-		    new QRCode(
-			"raw-"+self.props.address,
-			{
-			    text: self.props.address,
-			    width: 128,
-			    height: 128
-			});
-		    setTimeout(function(){
-			var codes = $('#raw-' + self.props.address + ' > img');
-			self.state.addrs[self.props.address] = codes.attr('src');
-			self.setState({addrs: self.state.addrs});
-			console.log("state",self.state.addrs);
-		    },100);
-		}
-	    },100);
-
 	    var addr = this.props.address ? (
 		<div className="taskAddrs">
-		 <div className="qr-code" id={"qr-"+self.props.address}>
-		    {self.state.addrs[self.props.address] ? <span><img src={self.state.addrs[self.props.address]} /></span> : <span></span>}
-		    
+		 <div className="qr-code" >
+		    {self.props.address ? <span><img src={qr.mkQR(this.props.address)}></img></span> : <span></span>}
 		 </div>
 		 {self.props.address}
 		</div>
@@ -109,7 +92,9 @@ define(["defs","util","hs"],function(defs,util,hs){
 		<div className={"task col-md-4 " + this.props.className}>
 
 		<div className="taskHead">
-		<h3><input onChange={this.onChange} type="checkbox" checked={this.props.task.status}></input>{task.name}</h3>
+		<h3>
+		    {self.props.noCheck ? "" : <input onChange={this.onChange} type="checkbox" checked={this.props.task.status}></input>}
+		    {task.name}</h3>
 		</div>
 
 		<div className="taskBody">

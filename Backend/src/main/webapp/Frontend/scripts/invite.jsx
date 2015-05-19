@@ -6,17 +6,22 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 
 	loadBtcAddress: function(){
 	    var self = this;
-	    if(this.props.invite)
-	    for(var task in this.props.invite.tasks){
-		if(!self.state.addrs[self.props.invite.tasks[task].id]){
-		    server.api.addressReq({
-			//type: 'GET',
-			data: {task_id: this.props.invite.tasks[task].id}
-		    })
-		    .done(function(addr){
-			self.state.addrs[self.props.invite.tasks[task].id] = addr.btc_address;
-			self.setState({addrs: self.state.addrs});
-		    });
+	    if(this.props.invite){
+		for(var task in this.props.invite.tasks){
+		    if(!self.state.addrs[self.props.invite.tasks[task].id]){
+			self.state.addrs[self.props.invite.tasks[task].id] = true;
+			server.api.addressReq({
+			    //type: 'GET',
+			    data: {task_id: this.props.invite.tasks[task].id}
+			})
+			    .done(hs.curry(function(taskid,addr){
+				self.state.addrs[taskid] = addr.btc_address;
+				self.setState({addrs: self.state.addrs});
+			    })(self.props.invite.tasks[task].id))
+			    .fail(function(err){
+				console.log("WAT!");
+			    });
+		    }
 		}
 	    }
 	},
@@ -75,7 +80,7 @@ requirejs(["server","defs","widgets","hs","ui"],function(server,defs,widgets,hs,
 			<h4>Available Tasks</h4>
 			<div className="with-floats status-holder">
 			{tasks.map(function(task){
-			    return (<InviteTask task={task} address={self.state.addrs[task.value.id]} />);
+			    return (<InviteTask noCheck={true} task={task} address={self.state.addrs[task.value.id] && self.state.addrs[task.value.id] != true ? self.state.addrs[task.value.id] : undefined} />);
 			})}
 		        </div>
 		        </div>
