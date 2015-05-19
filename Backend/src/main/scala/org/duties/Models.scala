@@ -2,7 +2,6 @@ package org.duties
 
 import com.mongodb.casbah.Imports._
 
-
 import Models._
 import Mongo.Collections._
 
@@ -16,11 +15,11 @@ import javax.xml.bind.DatatypeConverter
 import org.bitcoinj.core.{Address, Sha256Hash}
 
 object Models {
-  case class Task(name: String, description: Option[String] = None, penalty: Double, state: Option[String] = Some("Free"), total_bounty: Option[Double] = None, reward_bounty: Option[Double] = None, entrusted: Option[String] = None, payments: Seq[TaskPayment] = Seq(), reported_by: Seq[UserIdent] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
+  case class Task(name: String, description: Option[String] = None, penalty: Double, expiry_epoch: Long, state: Option[String] = Some("Free"), total_bounty: Option[Double] = None, reward_bounty: Option[Double] = None, entrusted: Option[UserIdent] = None, payments: Seq[TaskPayment] = Seq(), reported_by: Seq[UserIdent] = Nil, recurrent: Boolean, id: String = (new ObjectId().toString())) {
     def is_paid = entrusted.isDefined
   }
   case class Duty(author: UserIdent, name: String, participants: Seq[UserIdent], tasks: Seq[Task], id: String = (new ObjectId().toString())) 
-  case class User(username: String, password: String, id: String = (new ObjectId().toString())) {
+  case class User(username: String, password: String, btc_address: String, id: String = (new ObjectId().toString())) {
     def toIdent: UserIdent = UserIdent(username)
   }
   case class UserIdent(username: String)

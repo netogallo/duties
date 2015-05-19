@@ -10,9 +10,19 @@ import scala.collection.JavaConversions._
 object WalletListener extends AbstractWalletEventListener with MongoClient {
 
   def findTaskOutput(adr: Address): Option[TaskOutput] = TaskOutputs.findAddress(adr)
-
-//  def addPayment(task: Task, owner: UserIdent, value: Double): TaskPayment = 
-  //def addReward(task: Task, owner: UserIdent, value: Double): TaskReward = ???
+  
+  //rewards bounty in bitcoins to entrusted
+  def rewardEntrusted(task: Task) {
+    val ref = TaskRefs.find(task.id)
+    val entrusted = task.entrusted.map(Users.find)
+    
+    ???
+  }
+  
+  //finds tasks that are not reported and distribuites the given task reward equally
+  def collectBounty(task_id: String) {
+    //???
+  }
 
   //insert payment, mark as paid or add rewards
   def mkPayment(payment: TaskPayment): Either[TaskPayment, TaskReward] = {

@@ -4,6 +4,7 @@
 	"description": "Object that represents a user",
 	"properties": {
 	    "username": {"type": "string"},
+        "btc_address" : {"type": "string", "description": "Bitcoin address where user collects bounties"),
         "id" : {
             "type": "string", 
             "description": "Unique hash identifier for the duty. The field is absent on post requests and is defined by the backend."
@@ -52,21 +53,19 @@
         }
         }
 	    "entrusted": {
-		"type": "string",
-		"description": "The person that is responsible for performing this duty. Absence of the field indicates no persion is yet assigned to the task"
+		"type": "object",
+        "properties": {
+        "username": { "type": "string", "description": "The person that is responsible for performing this duty. Absence of the field indicates no persion is yet assigned to the task" }
 	    },
-
 	    "reported_by": {
 		"type": "array",
 		"description": "Users who claim the task was not completed.",
 		"items": {"type": "string"}
 	    },
-
-	    "duration": {
+	    "expiry_epoch": {
 		"type": "number",
-		"description": "Hours to complete the task"
-	    },
-
+		"description": "Number of milliseconds after January 1, 1970 (midnight UTC/GMT), time at which the task expires"
+	    },        
 	    "state": {
 		"type": "object",
 		"properties": {

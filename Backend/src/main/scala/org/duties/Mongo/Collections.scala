@@ -2,6 +2,8 @@ package org.duties
 
 import com.mongodb.casbah.Imports._
 
+import bitcoin._
+import java.util.Calendar
 import scala.reflect.api.TypeTags
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
@@ -66,10 +68,17 @@ object Mongo {
           result.getN
         }
       }
+      def setExpired(task_id: String): Int = {
+        val dutyTask = MongoDBObject("tasks._id" -> task_id)
+        val taskExpired = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Expired"))
+        val result = db.getCollection(Duties.name).update(dutyTask, taskExpired)
+        
+        result.getN
+      }
       //todo: move previous payments to rewards
       def setEntrusted(task: Task, owner: UserIdent): Int = {
         val dutyTask = MongoDBObject("tasks._id" -> task.id)
-        val taskEntrusted = MongoDBObject("$set" -> MongoDBObject("tasks.$.entrusted" -> owner.username))
+        val taskEntrusted = MongoDBObject("$set" -> MongoDBObject("tasks.$.entrusted" -> UserIdents.toMongo(owner)))
         val taskState = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Entrusted"))
         val result = db.getCollection(Duties.name).update(dutyTask, taskEntrusted)
         val result2 = db.getCollection(Duties.name).update(dutyTask, taskState)
@@ -95,12 +104,12 @@ object Mongo {
         val reports: Seq[Report] = ref.map(Reports.findReports).getOrElse(Nil)
         val uids = reports.map(_.reporter)
         
-        new Task(
+        val updatedTask = new Task(
           name = o.as[String]("name"),
           description = Option(o.as[String]("description")),
           state = Option(o.as[String]("state")),
           penalty = o.as[Double]("penalty"),
-          entrusted = Option(o.as[String]("entrusted")),
+          entrusted = Option(o.as[DBObject]("entrusted")).map(UserIdents.fromMongo),
           recurrent = o.as[Boolean]("recurrent"),
           reported_by = uids,
           id = tid,
@@ -110,8 +119,18 @@ object Mongo {
             val xx = ref.map(Payments.findPayments).getOrElse(Nil)
             println("Found payments: " +xx.mkString(","))
             xx
+          },
+          expiry_epoch = {
+            val expiry = o.as[Long]("expiry_epoch")
+            val now = Calendar.getInstance.getTimeInMillis()
+            if (now > expiry) setExpired(tid)
+            expiry
           }
         )
+
+        if (updatedTask.state == "Expired") WalletListener.rewardEntrusted(updatedTask)
+        if (updatedTask.state == "Reported") WalletListener.collectBounty(tid)
+        updatedTask
       }
     }
 
@@ -194,7 +213,8 @@ object Mongo {
         User(
           username = m.as[String]("username"),
           password = "<hidden>",
-          id = m.as[String]("_id")
+          id = m.as[String]("_id"),
+          btc_address = m.as[String]("btc_address")
         )
       }
 
