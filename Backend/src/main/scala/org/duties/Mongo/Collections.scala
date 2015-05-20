@@ -200,7 +200,7 @@ object Mongo {
 
         //check if we should collect due to reporting
         val updatedTasks = ts.map(t => 
-          if (t.entrusted.isDefined && t.state == "Entrusted"){            
+          if (t.entrusted.isDefined && t.state == "Entrusted"){
             if (t.entrusted.isDefined && Reports.isReportedByMost(t, ps) && t.state != "Reported") {
               WalletListener.collectBounty(t, duty)
               Tasks.setReported(t.id)

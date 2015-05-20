@@ -17,13 +17,13 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
 
   //rewards bounty in bitcoins to entrusted (if defined)
   def rewardEntrusted(task: Task) {        
-    println("Rewarding entrusted");
+    println("Rewarding entrusted on "+ task.id);
 
     if (task.state == "Expired" && task.entrusted.isDefined){
       val ref = TaskRefs.find(task.id)
       val btc_address: Option[String] = task.entrusted.flatMap(Users.find).map(_.btc_address)
 
-      if (!task.entrusted.isDefined) println("ERROR: REWARDING AN UNENTRUSTED TASK " + )
+      if (!task.entrusted.isDefined) println("ERROR: REWARDING AN UNENTRUSTED TASK " + task.id )
       else        
       if (!btc_address.isDefined) println("ERROR: ADDRESS FOR ENTRUSTED " + task.entrusted + " IS NOT DEFINED. EXPIRATION WILL NOT CAUSE PAYMENT")
       else {
@@ -43,12 +43,19 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
   
   //finds tasks that are not reported and distribuites the given task reward equally
   def collectBounty(task: Task, duty: Duty) {
-    //entrusted should be existent and other tasks in state entrusted
-    
-    val entrustedTasks = duty.tasks.filter(_.state == "Entrusted")
-    println("Distributing among " + entrustedTasks)
-    
-    
+    //entrusted should be existent and other tasks in state entrusted   
+    if (task.total_bounty.isDefined){
+      val value = task.total_bounty.get
+      val entrustedTasks = duty.tasks.filter(_.state == "Entrusted")
+      println("Distributing among " + entrustedTasks)
+      
+      val equalDist: Double = value / entrustedTasks.size
+
+      entrustedTasks.foreach(t => {        
+        val ref = TaskRefs.fromTask(task, Some(duty))
+        Tasks.bountyIncrease(ref, equalDist)
+      })
+    }    
   }
 
   //insert payment, mark as paid or add rewards
