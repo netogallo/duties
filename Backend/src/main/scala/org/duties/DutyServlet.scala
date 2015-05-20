@@ -40,9 +40,9 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     val uid = requireAuth
     val invite = read[Invite](in)
     val isAuthor = uid.username == (invite.author.username)
-//    val refs = invite.tasks.map(t => TaskRefs.fromTask(t, Some(d)))
     val missingRefs: Seq[TaskRef] = invite.tasks.filter(r => !TaskRefs.exists(r.task_id))
-
+    if (invite.tasks.isEmpty) mkError("You have 0 tasks in your invite.")
+    else
     if (missingRefs.nonEmpty) mkError("There is no duty containing this task_id: " +missingRefs.head.task_id)
     else 
     if (!isAuthor) mkError("Author must be logged")
@@ -80,7 +80,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     if (previousReport.isDefined) {
       //mkError("This task is reported by you");
       Reports.remove(ref.get, rep.reporter)
-      val reportsNow = ref.map(Reports.findReports).getOrElse(Nil)
+      val reportsNow = ref.map(r => Reports.findReports(r)).getOrElse(Nil)
       write(reportsNow)
     }
     else
@@ -157,6 +157,11 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
   }
   
   post("/log-out"){
+    cookies.delete(Auth.COOKIE)
+    redirect("/")
+  }
+  
+  post("/logout"){
     cookies.delete(Auth.COOKIE)
     redirect("/")
   }
