@@ -45,4 +45,7 @@ object Bithack {
   }
 
   def mkReceivingAddress = wallet.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS)
+
+  def sendMoney(btc: Coin, adr: Address){
+  }
 }

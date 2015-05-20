@@ -18,7 +18,7 @@ import org.bitcoinj.core.{Address, Coin, Sha256Hash}
 import Bithack._
 
 class DutyServlet extends DutyStack with Homepage with Captchas {
-  get("/") { redirect("/Frontpage") }
+  get("/") { home }
   get("/admin") { admin } 
 
   //creates task refs and generates addreses for each user
@@ -80,7 +80,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     if (previousReport.isDefined) {
       //mkError("This task is reported by you");
       Reports.remove(ref.get, rep.reporter)
-      val reportsNow = ref.map(Reports.findReports).getOrElse(Nil)
+      val reportsNow = ref.map(r => Reports.findReports(r)).getOrElse(Nil)
       write(reportsNow)
     }
     else

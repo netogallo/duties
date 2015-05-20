@@ -352,7 +352,7 @@ object Mongo {
         db.getCollection(name).find(q).toArray().map(fromMongo)        
       }
       def remove(taskRef: TaskRef, uid: UserIdent): Int = {
-        val q = MongoDBObject("task" -> TaskRefs.toMongo(taskRef))
+        val q = MongoDBObject("task" -> TaskRefs.toMongo(taskRef), "reporter" -> UserIdents.toMongo(uid))
         val result = db.getCollection(name).remove(q)
         result.getN
       }

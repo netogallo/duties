@@ -14,9 +14,13 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
   //rewards bounty in bitcoins to entrusted
   def rewardEntrusted(task: Task) {
     val ref = TaskRefs.find(task.id)
-    val entrusted = task.entrusted.map(Users.find)
-    
-    ???
+    val btc_address: Option[String] = task.entrusted.flatMap(Users.find).map(_.btc_address)
+
+    if (btc_address.isDefined) {
+      val entrustedAddress = new Address(Bithack.OPERATING_NETWORK, btc_address.get)
+      val totalBounty = task.total_bounty.get
+      Bithack.sendMoney(Coin.parseCoin(totalBounty.toString), entrustedAddress)
+    }
   }
   
   //finds tasks that are not reported and distribuites the given task reward equally
