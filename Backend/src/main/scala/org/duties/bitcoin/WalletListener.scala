@@ -19,11 +19,14 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
   def rewardEntrusted(task: Task) {        
     println("Rewarding entrusted");
 
-    if (task.state == "Expired"){
+    if (task.state == "Expired" && task.entrusted.isDefined){
       val ref = TaskRefs.find(task.id)
       val btc_address: Option[String] = task.entrusted.flatMap(Users.find).map(_.btc_address)
 
-      if (btc_address.isDefined) {
+      if (!task.entrusted.isDefined) println("ERROR: REWARDING AN UNENTRUSTED TASK " + )
+      else        
+      if (!btc_address.isDefined) println("ERROR: ADDRESS FOR ENTRUSTED " + task.entrusted + " IS NOT DEFINED. EXPIRATION WILL NOT CAUSE PAYMENT")
+      else {
         val entrustedAddress = new Address(Bithack.OPERATING_NETWORK, btc_address.get)
         if (!task.total_bounty.isDefined) println("ERROR: TOTAL BOUNTY NOT DEFINED: TASK ID = "+ task.id)
         else {
@@ -32,9 +35,7 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
           val coin = Coin.parseCoin(df.format(totalBounty))
           Bithack.sendMoney(coin, entrustedAddress)
           Tasks.setRewarded(task.id)
-        }                
-      } else {
-        println("ERROR: ADDRESS FOR ENTRUSTED IS NOT DEFINED. EXPIRATION WILL NOT CAUSE PAYMENT")
+        }        
       }
     
     }
@@ -78,9 +79,8 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
           Payments.addPayment(payment); Left(payment) 
         }
       } else {
-        println("Detected reward!!! ")
+        println("Detected reward!! ")
         val reward = TaskReward(payment.tx_hash, payment.taskOutput, payment.value)
-        println("Adding")
         Rewards.addReward(reward)
         Right(reward)
       }
@@ -95,7 +95,7 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
     val btc_addresses = btc_outputs map getAddress
     
     val payments = btc_addresses.flatMap(btc_adr => {      
-      println("Recibimos en address: " + btc_adr.toString + "; buscando ...")
+      println("Recibimos en address: " + btc_adr.toString + "; " + value)
       val taskOutput = findTaskOutput(btc_adr)
       
       if (taskOutput.isDefined){        
@@ -103,7 +103,10 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
         //val task = Tasks.fromRef(taskOutput)
         //val penalty = task.map(_.penalty)
         val taskPayment = TaskPayment(tx.getHash.toString, out, value)
-        val deposit = mkPayment(taskPayment)
+        
+        val exists = paymentExists(tx.getHash.toString)
+        println("Payment exists? ... " + exists)
+        val deposit = if (!exists) mkPayment(taskPayment)
         Some(taskPayment)
       } else {
         println("WE RECEIVED A TASK PAYMENT TO THE WALLET FROM NO WHERE: " + btc_addresses.mkString(",") + "; " + tx.getHash.toString)

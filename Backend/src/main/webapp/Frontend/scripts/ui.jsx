@@ -109,6 +109,7 @@ define(["server","util","hs"],function(server,util,hs){
 		})}
                 
 		{login}
+		{logout}
 		</ul>
 		</div>
 		</div>

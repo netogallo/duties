@@ -15,6 +15,7 @@ trait Homepage {
     val auth = request.cookies.get(Auth.COOKIE)
     val user = User("kmels", "pw", btc_address = null)
     val kmels = UserIdent("kmels")
+    val gg = UserIdent("gg")
     val netogallo = UserIdent("netogallo")
     val authRequest = Auth.fromUser(user)
     val captcha = mkCaptcha
@@ -24,7 +25,7 @@ trait Homepage {
     val now = Calendar.getInstance.getTimeInMillis()
     val tenMinutes = 4 * 60 * 1000;
     val task = Task(penalty = 0.000155d, name = "My task", expiry_epoch = now + tenMinutes, recurrent = false)
-    val duty = Duty(kmels, "Our big duty", Seq(netogallo, kmels), Seq(task))
+    val duty = Duty(kmels, "Our big duty", Seq(netogallo, kmels, gg), Seq(task))
 
     def loggedUser = maybeAuth
     def isLogged = loggedUser.isDefined
@@ -34,10 +35,12 @@ trait Homepage {
     val invite = loggedUser.map(author => Invite(kmels, netogallo, Seq(ref)))
     val report = Report(kmels, ref)
 
+    println("loggedUser: " +loggedUser)
     <html>
       <body>
         {
-        if (auth.isDefined)
+        if (maybeAuth.isDefined)
+          {loggedUser}
           <p>Last auth: {if (auth.isDefined) auth.get else null }
           </p>
 

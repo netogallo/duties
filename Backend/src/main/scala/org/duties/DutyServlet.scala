@@ -18,7 +18,7 @@ import org.bitcoinj.core.{Address, Coin, Sha256Hash}
 import Bithack._
 
 class DutyServlet extends DutyStack with Homepage with Captchas {
-  get("/") { redirect("/Frontend") }
+  get("/") {  home } //redirect("/Frontend") }
   get("/api") { home }
   get("/admin") { admin } 
 
@@ -69,13 +69,19 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
 
   //validates that task_id exists
   def mkReport(json: String) = try {
+    val loggedUser = requireAuth
     val rep: Report = read[Report](json)    
     val ref: Option[TaskRef] = TaskRefs.find(rep.task.task_id)   
     val task: Option[Task] = ref.flatMap(Tasks.fromRef)
     val taskReports: Seq[Report] = ref.map(Reports.findReports).getOrElse(Nil)
     val previousReport = taskReports.find(_.reporter == rep.reporter)
 
+    println("Report by " + rep.reporter)
+    println("Task entrusted " + task.map(_.entrusted))
 //task.map(t => t.reported_by.contains(rep.reporter))
+
+    if (loggedUser != rep.reporter) mkError("The reporter must be the logged user")
+    else
     if (!task.isDefined) mkError("This task doesn't exist: " + rep.task.task_id)
     else
     if (previousReport.isDefined) {
@@ -86,7 +92,7 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     }
     else
     if (!task.get.entrusted.isDefined) mkError("You can report a task only if it's entrusted.")
-    else
+    else    
     if (task.get.entrusted.get == rep.reporter) mkError("You can't report your entrusted task. Come on, it will eventually expire!")
     else {      
       mk[Report](rep.copy(task = ref.get), Reports)
@@ -162,6 +168,11 @@ class DutyServlet extends DutyStack with Homepage with Captchas {
     redirect("/")
   }
   
+  get("/logout") {
+    cookies.delete(Auth.COOKIE)
+    redirect("/Frontend")
+  }
+
   post("/logout"){
     cookies.delete(Auth.COOKIE)
     redirect("/")

@@ -143,7 +143,7 @@ object Mongo {
           }
         )
         
-        if (updatedTask.state == "Expired") WalletListener.rewardEntrusted(updatedTask)
+        if (updatedTask.state == "Expired" && updatedTask.entrusted.isDefined) WalletListener.rewardEntrusted(updatedTask)
         updatedTask
       }
     }
@@ -453,7 +453,6 @@ object Mongo {
         val taskRef = reward.task_ref
         val result = db.getCollection(name).insert(toMongo(reward))
         println("ADDED REWARD OF " + reward.value) 
-        println("INCREASING BOUNTY ")
         Tasks.bountyIncrease(taskRef, reward.value)
         Tasks.rewardIncrease(taskRef, reward.value)
         result.getN
