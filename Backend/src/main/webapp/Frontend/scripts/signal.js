@@ -51,9 +51,8 @@ define(["hs"],function(hs){
 			},
 
 			update: function(fields){
-			    console.log("fields",fields);
+			    console.log("fields",this);
 			    for(var field in fields){
-				console.log("set",field);
 				this.setProp(field,fields[field]);
 
 			    }
@@ -77,23 +76,27 @@ define(["hs"],function(hs){
 
 			    function setSignal(obj_,constr){
 
-				var obj = obj_.isSignal ? obj_ : constr(obj_)
-				//if(!obj.isSignal)
-				    
-
+				if(!obj_.isSignal)
+				    self[prop] = constr(obj_);
 				obj.setUpdate(function(){self.update.apply(self,[])});
 			    }
 
 			    if(type.type == signalT){
 				
-				setSignal(self[prop],type.type.create);
+				if(!self[prop].isSignal){
+				    self[prop] = type.type.create(self[prop]);
+				}
+
+				self[prop].setUpdate(function(){self.update.apply(self,[])});
 			    }
 
 			    else if(type.type && type.type.type == arrayT && type.type.of.type == signalT){
 
 				for(var i in self[prop]){
-				    console.log(type.type.of);
-				    setSignal(self[prop][i],type.type.of.create);
+				    if(!self[prop][i].isSignal){
+					self[prop][i] = type.type.of.create(self[prop][i]);
+				    }
+				    self[prop][i].setUpdate(function(){self.update.apply(self,[])});
 				}
 			    }
 			}

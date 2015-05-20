@@ -117,7 +117,6 @@ define(["defs","util","hs","qr"],function(defs,util,hs,qr){
 		<div className="taskBody">
 
 		<div className="taskStatus">
-		    <span className="label label-success"><span className="glyphicon btc-curr">&nbsp;</span>{task.bounty}</span>
 		    &nbsp;
 		    <span className="label label-info"><span className="glyphicon btc-curr">&nbsp;</span>{task.penalty}</span>
 		    &nbsp;

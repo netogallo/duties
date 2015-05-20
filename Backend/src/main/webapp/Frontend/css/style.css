@@ -84,6 +84,16 @@ h3{
     background: #d2d5da !important;
 }
 
+.task > .taskRewarded{
+
+    background: #33b679 !important;
+}
+
+.task > .taskReported{
+    background: #d34836 !important;
+}
+
+
 .task > .taskHead > h3{
 
     color: #ffffff;
@@ -113,8 +123,18 @@ h3{
     margin-top: 0px;
 }
 
+.task{
+
+    margin-top: 5px;
+}
+
 .task > .taskEmptyBody{
     border: 2px solid #d2d5da !important;
+}
+
+.taskOperations{
+
+    padding-top: 5px;
 }
 
 .task > .taskTitle{

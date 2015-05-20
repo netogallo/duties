@@ -137,7 +137,7 @@ define(["server","util","hs"],function(server,util,hs){
     var host = "/Frontend/"
 
     var LoggedMenu = [
-	{name: "Duties", href: host + "duties.html"},
+	{name: "Entrustments", href: host + "duties.html"},
 	{name: "Invites", href: host + "invite.html"}
     ];
 

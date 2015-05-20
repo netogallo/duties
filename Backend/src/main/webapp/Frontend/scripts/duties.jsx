@@ -69,6 +69,11 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    task_penalty: parseFloat($('input[name="task-penalty"]').val()),
 		    task_expires: this.currDate ? this.currDate.getTime() : (new Date()).getTime()
 		}]);
+
+		$('input[name="task-name"]').val('');
+		$('input[name="task-description"]').val('');
+		$('input[name="task-penalty"]').val('');
+	
 	    }
 	},
 
@@ -81,7 +86,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<input type="text" id="task-name" className="form-control" name="task-name"></input>
 		<label htmlFor="task-description">Description</label>
 		<input type="text" id="task-description" className="form-control" name="task-description"></input>
-		<label htmlFor="task-penalty">Penalty</label>
+		<label htmlFor="task-penalty">Deposit</label>
 		<input type="text" id="task-penalty" className="form-control" name="task-penalty"></input>
 		<label htmlFor="task-expires">Expiration Date</label>
                 <widgets.JQueryC elem={<div id="task-expires"></div>} onRender={function(){$('#task-expires').datepicker().on('changeDate', function(d){self.currDate = d.date;}) }}/>
@@ -93,32 +98,22 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
     });
 
     var Task = React.createClass({
-	
-	isReported: function(){
-
-	    return hs.find(
-		function(username){
-		    return username == server.getLoggedUser().username;}
-		,this.props.task.reported_by);
-	},
 
 	updateTask: function(){
 
 	    var self = this;
-
 	    server.api.mapTasksReq({
-		data: {
-		    data: [{task_id: self.props.task.id}]
-		}
+		data: [{task_id: self.props.task.id}]
 	    })
 	    .done(function(tasks){
 
 		var task = hs.find(
-		    function(task_){return task_.id == task.id;},
+		    function(task_){return task_.id == self.props.task.id;},
 		    tasks);
 
-		if(task)
+		if(task){
 		    self.props.task.update(task);
+		}
 	    });
 	},
 
@@ -139,7 +134,11 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    alert("Joder con Kaiser!");
 		    self.reportReq = false;
 		})
-		.done(function(){
+		.done(function(result){
+		    console.log(result);
+		    if(result.error)
+			ui.alertError(result.error);
+
 		    self.updateTask();
 		    self.reportReq = false;
 		});
@@ -156,6 +155,29 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	},
 	
 	render: function(){
+	    var self = this;
+	    var isReported = function(reports){
+		console.log(self.props.task.reported_by);
+		if(!self.props.task)
+		    return false;
+
+		console.log("report Resutl",hs.find(
+		    function(username){
+			console.log("report user",username);
+			return username.username == server.getLoggedUser().username;}
+		    ,self.props.task.reported_by));
+		return hs.find(
+		    function(username){
+			return username.username == server.getLoggedUser().username;}
+		    ,self.props.task.reported_by);
+	    };
+
+	    var headCss = "taskHead";
+
+	    if(this.props.task.state == "Rewarded")
+		headCss += " taskRewarded";
+	    else if(this.props.task.state == "Reported")
+		headCss += " taskReported";
 
 	    var reportCss = ["report-btn","btn","btn-default"];
 
@@ -166,19 +188,21 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    else
 		reportBtnCss.push("label-success");
 
-	    if(this.isReported())
-		reportCss.push("active");
-
 	    var report;
-	    
-	    if(this.props.task.entrusted)
-		report = <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>
 
 	    if(this.props.task){
+		
+		if(this.props.task.entrusted && this.props.task.state == "Entrusted"){
+		    if(isReported()){
+			report = <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-heart-empty"></span>{" Forgive"}</button>;
+		    }else{
+			report = <button type="button" onClick={this.handleReport} className={hs.unwords(reportCss)}><span className="glyphicon glyphicon-flag"></span>{" Report"}</button>;
+		    }
+		}
 
 		return (
 		    <div className="task col-md-4">
-		    <div className={util.if_(this.props.task.entrusted)("taskHead")("taskHead taskEmpty")}>
+		    <div className={util.if_(this.props.task.entrusted)(headCss)(headCss + " taskEmpty")}>
 		    <h3>{this.props.task.name}</h3>
 		    </div>
 		    <div className="taskBody taskEmptyBody">
@@ -223,6 +247,9 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    participants: hs.map(function(u){return {username: u.username};},this.state.sig.selection)
 		}]);
 	    }
+
+	    $('input[name="duty-name"]').val('');
+	    this.state.sig.update({selection: []});
 	},
 
 	//onTextChange: hs.curry(function(self,
@@ -251,7 +278,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<label htmlFor="duty-name">Name</label>
 		<input type="text" id="duty-name" className="form-control" name="duty-name"></input>
 		<widgets.Search sig={this.state.sig} onChange={onChange}/>
-		<input className="btn btn-default" type="submit" value="Create Duty"></input>
+		<input className="btn btn-default" type="submit" value="Create Entrustment"></input>
 		</form>
 		</div>);
 	}
@@ -405,7 +432,6 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		.fail(function(data){
 		    console.log("fail");
 		    console.log(data);
-		    self.props.duty.update({unsaved: false});
 		    self.saving = false;
 		});
 	    }
@@ -420,18 +446,21 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
 	    var tasks = splitTasks(this.props.duty ? this.props.duty.tasks : []);
 	    var boundTasks = tasks[0];
+	    var rewardedTasks = hs.filter(function(t){return t.state == 'Rewarded';},boundTasks);
+	    var failedTasks = hs.filter(function(t){return t.state == 'Reported';},boundTasks);
+	    var runningTasks = hs.filter(function(t){return t.state == 'Entrusted';},boundTasks);
+	    
 	    var freeTasks = tasks[1];
-
 	    hs.map(
 		function(task){
-		    reported_by[task.task_id] = task.reported_by;
+		    reported_by[task.id] = task.reported_by;
 		},
 		this.props.duty ? this.props.duty.tasks : []);
 
 	    hs.map(
 		function(user){		
 		    var loss = hs.fold(function(s,task){
-			if(task.entrusted == user.username && self.props.duty.participants.length / 2 <= reported_by[task.task_id].length)
+			if(task.entrusted && task.entrusted.username == user.username && self.props.duty.participants.length / 2 <= reported_by[task.id].length)
 			    return s - task.penalty;
 			else
 			    return s;
@@ -475,7 +504,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    <div className="taskOperations col-container-1">
 		    {dialog}
 		    <button type="button" className="btn btn-primary btn-sm" data-toggle="modal" data-target="#task-edit">Create Task</button>
-		    <button type="button" onClick={this.saveDuty} className="btn btn-primary btn-sm">Save Duty</button>
+		    <button type="button" onClick={this.saveDuty} className="btn btn-primary btn-sm">Save Entrustment</button>
 		    </div>);
 	    else
 		operations = (
@@ -502,11 +531,23 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		    </div>
 		    
 		    <div className="tasks">
+
 		    <div className="with-floats">
 		    <h4>Tasks Assigned to Users</h4>
-		    {boundTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
+		    {runningTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
 		    <div className="with-floats">
+		    
+		    <div className="with-floats">
+		    <h4>Completed Tasks</h4>
+		    {rewardedTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
+		    </div>
+
+		    <div className="with-floats">
+		    <h4>Failed Tasks</h4>
+		    {failedTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
+		    </div>
+
 		    <h4>Free Tasks</h4>
 		    {freeTasks.map(function(task){return <Task total={self.props.duty.participants.length} onReport={self.handleTaskUpdate} task={task}/>;})}
 		    </div>
@@ -537,7 +578,11 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 	    var self = this;
 	    server.api.dutiesReq({type: 'GET'})
 	    .done(function(data){
-		self.setState({duties: hs.map(defs.DutyS.create,data)});
+		self.setState({duties: hs.map(function(duty){
+		    var s = defs.DutyS.create(duty);
+		    s.setUpdate(function(){self.setState({x:'y'});});
+		    return s;
+		}, data)});
 	    });
 
 	},
@@ -610,7 +655,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 		<DutyEdit onSubmit={this.saveDuty} className="modal-body"/>
 		</Dialog>
 
-		<button type="button" className="btn btn-primary btn-lg" data-toggle="modal" data-target="#duty-edit">Create Duty</button>
+		<button type="button" className="btn btn-primary btn-lg" data-toggle="modal" data-target="#duty-edit">Create Entrustment</button>
 		</div>
 
 		</div>
@@ -643,7 +688,7 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 
     ui.render({
 	nav: ui.LoggedMenu,
-	title: <h2>Duties</h2>,
+	title: <h2>Entrustments</h2>,
 	body: <Duties />    
     });
 });

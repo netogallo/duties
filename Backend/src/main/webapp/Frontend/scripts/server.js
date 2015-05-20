@@ -121,9 +121,7 @@ define(["hs"],function(hs){
 	
 	getLoggedUser: function(){
 
-	    return {
-		username: "user1"
-	    };
+	    return currUser;
 	},
 
 	host: "localhost"
