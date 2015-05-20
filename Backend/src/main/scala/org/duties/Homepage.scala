@@ -22,7 +22,7 @@ trait Homepage {
     
     val hashedPw = "pw".sha256.hex
     val now = Calendar.getInstance.getTimeInMillis()
-    val tenMinutes = 10 * 60 * 1000;
+    val tenMinutes = 4 * 60 * 1000;
     val task = Task(penalty = 0.000155d, name = "My task", expiry_epoch = now + tenMinutes, recurrent = false)
     val duty = Duty(kmels, "Our big duty", Seq(netogallo, kmels), Seq(task))
 
@@ -121,7 +121,7 @@ trait Homepage {
     
     <html>
     <body>
-      <h1>Wallet balance: ${Bithack.wallet.getBalance(BalanceType.ESTIMATED)}</h1>
+      <h1>Wallet balance: {Bithack.wallet.getBalance(BalanceType.ESTIMATED).toFriendlyString}</h1>
       <h1>Total incoming transactions</h1>
     </body>
     </html>

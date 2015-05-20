@@ -31,7 +31,7 @@ object Bithack {
     NETWORK.start()
     new Thread(new Runnable {
       def run() {
-        //NETWORK.downloadBlockChain()
+        NETWORK.downloadBlockChain()
       }
     }).start
   }
@@ -46,6 +46,9 @@ object Bithack {
 
   def mkReceivingAddress = wallet.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS)
 
-  def sendMoney(btc: Coin, adr: Address){
+  def sendMoney(btc: Coin, adr: Address): Transaction = {
+    println("Sending coin money " + btc.toFriendlyString + " to " + adr)    
+    val result = wallet.sendCoins(NETWORK, adr, btc);
+    result.broadcastComplete.get();
   }
 }
