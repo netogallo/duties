@@ -266,7 +266,10 @@ requirejs(["server","signal","defs","ui","util","widgets"],function(server,signa
 			    }
 			,hs.filter(
 			    function(user){
-				return query != "" && user.username.contains(query);
+				if(user.username.contains)
+				    return query != "" && user.username.contains(query);
+				else
+				    return query != "" && user.username.search(query) >= 0;
 			    },
 			    users)));
 		    });
