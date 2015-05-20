@@ -18,7 +18,8 @@ import org.bitcoinj.core.{Address, Coin, Sha256Hash}
 import Bithack._
 
 class DutyServlet extends DutyStack with Homepage with Captchas {
-  get("/") { home }
+  get("/") { redirect("/Frontend") }
+  get("/api") { home }
   get("/admin") { admin } 
 
   //creates task refs and generates addreses for each user

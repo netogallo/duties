@@ -16,7 +16,9 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
   }
 
   //rewards bounty in bitcoins to entrusted (if defined)
-  def rewardEntrusted(task: Task) {    
+  def rewardEntrusted(task: Task) {        
+    println("Rewarding entrusted");
+
     if (task.state == "Expired"){
       val ref = TaskRefs.find(task.id)
       val btc_address: Option[String] = task.entrusted.flatMap(Users.find).map(_.btc_address)
@@ -25,8 +27,10 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
         val entrustedAddress = new Address(Bithack.OPERATING_NETWORK, btc_address.get)
         if (!task.total_bounty.isDefined) println("ERROR: TOTAL BOUNTY NOT DEFINED: TASK ID = "+ task.id)
         else {
+          val df = new java.text.DecimalFormat("#.000000000");
           val totalBounty = task.total_bounty.get
-          Bithack.sendMoney(Coin.parseCoin(totalBounty.toString), entrustedAddress)
+          val coin = Coin.parseCoin(df.format(totalBounty))
+          Bithack.sendMoney(coin, entrustedAddress)
           Tasks.setRewarded(task.id)
         }                
       } else {
@@ -71,7 +75,6 @@ object WalletListener extends AbstractWalletEventListener with MongoClient {
           Left(payment)
         } else  { 
           println("Detected payment! ")
-          Tasks.setRewarded(task, outputOwner)
           Payments.addPayment(payment); Left(payment) 
         }
       } else {

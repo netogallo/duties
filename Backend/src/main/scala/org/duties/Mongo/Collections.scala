@@ -42,11 +42,9 @@ object Mongo {
     object Tasks extends Collections[Task] with MongoClient {
       val Q: TaskRef => DBObject = ref => MongoDBObject("tasks._id" -> ref.task_id)
       override def name = "tasks"      
-      def bountyIncrease(taskRef: TaskRef, value: Double): Int = {  
-        
+      def bountyIncrease(taskRef: TaskRef, value: Double): Int = {          
         println("Increasing bounty on " + taskRef.task_id + " by " + value)
         val t = fromRef(taskRef)
-        println("TASK : " + t)
         if (!t.isDefined) 0
         else {
           val task = t.get
@@ -59,13 +57,14 @@ object Mongo {
         }
       }        
       def rewardIncrease(taskRef: TaskRef, value: Double): Int ={
+        println("Increasing reward on " + taskRef.task_id + " by " + value)
         val t = fromRef(taskRef)
         if (!t.isDefined) 0
         else {
           val task = t.get
           val dutyTask = Q(taskRef)
           val newReward = (task.reward_bounty.getOrElse(0d) + value)
-          println("Setting reward to "+newReward)
+          println("Setting reward bounty to "+newReward)
           val nextReward = MongoDBObject("$set" -> MongoDBObject("tasks.$.reward_bounty" -> newReward))
           val result = db.getCollection(Duties.name).update(dutyTask, nextReward)
           result.getN
@@ -79,9 +78,10 @@ object Mongo {
         result.getN
       }
       def setRewarded(task_id: String): Int = {
+        println("Setting " + task_id + " as rewarded")
         val dutyTask = MongoDBObject("tasks._id" -> task_id)
-        val taskExpired = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Rewarded"))
-        val result = db.getCollection(Duties.name).update(dutyTask, taskExpired)
+        val taskRewarded = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Rewarded"))
+        val result = db.getCollection(Duties.name).update(dutyTask, taskRewarded)
         
         result.getN
       }
@@ -99,12 +99,6 @@ object Mongo {
         val taskState = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Entrusted"))
         val result = db.getCollection(Duties.name).update(dutyTask, taskEntrusted)
         val result2 = db.getCollection(Duties.name).update(dutyTask, taskState)
-        result.getN
-      }
-      def setRewarded(task: Task, owner: UserIdent): Int = {
-        val dutyTask = MongoDBObject("tasks._id" -> task.id)
-        val taskState = MongoDBObject("$set" -> MongoDBObject("tasks.$.state" -> "Rewarded"))
-        val result = db.getCollection(Duties.name).update(dutyTask, taskState)
         result.getN
       }
       def fromRef(r: TaskRef): Option[Task] = {
@@ -429,8 +423,7 @@ object Mongo {
         val taskRef = payment.task_ref
         val result = db.getCollection(name).insert(toMongo(payment))
         
-        println("ADDED PAYMENT OF " + payment.value)
-        println(" INCREASING BOUNTY ")
+        println("Added payment of: " + payment.value)
         Tasks.bountyIncrease(taskRef, payment.value)          
         result.getN 
       }
@@ -458,7 +451,7 @@ object Mongo {
       def addReward(reward: TaskReward): Int = {
         println("Adding reward")
         val taskRef = reward.task_ref
-        val result = db.getCollection(name).insert4(toMongo(reward))
+        val result = db.getCollection(name).insert(toMongo(reward))
         println("ADDED REWARD OF " + reward.value) 
         println("INCREASING BOUNTY ")
         Tasks.bountyIncrease(taskRef, reward.value)
