@@ -46,6 +46,7 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
 	    return(
 		<div>
 		<div className="splash col-md-8">
+		    <iframe width="560" height="315" src="https://www.youtube.com/embed/FMX4h5B3LWo" frameborder="0" allowfullscreen></iframe>
 		</div>
 		<div className="register col-md-4">
 		<h3>Create an Account</h3>
@@ -59,7 +60,7 @@ requirejs(["ui","hs","server"],function(ui,hs,server){
     server.onLogin(function(user,e){if(!user.error) window.location = 'duties.html'});
 
     ui.render({
-	title: "Duites!",
+	title: <h1>Entrustments System</h1>,
 	nav: [],
 	body: (<Homepage />)
     });
