@@ -80,7 +80,7 @@ define(["server","util","hs"],function(server,util,hs){
 	    var self = this;
 	    alerts = hs.filter(function(a){return !a.dismissed;},alerts);
 	    var login = this.state.user ?
-	        <li><a href="#">Welcome! {this.state.user.username}</a></li>
+	        <li><a href="#">Welcome! {this.state.user.username}</a></li>            
 		:
 		(<li className="dropdown">
                 <a href="#" data-toggle="dropdown" className="dropdown-toggle">Log In<b className="caret"></b></a>
@@ -97,6 +97,7 @@ define(["server","util","hs"],function(server,util,hs){
 		</ul>
                 </li>);
 
+        var logout = this.state.user ? <li><a href="/logout">Logout</a></li> : ""
 
 	    return (
 		<div className="container">
@@ -108,6 +109,7 @@ define(["server","util","hs"],function(server,util,hs){
 		})}
                 
 		{login}
+		{logout}
 		</ul>
 		</div>
 		</div>
