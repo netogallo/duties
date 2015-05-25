@@ -17,7 +17,8 @@ define(["signal","hs"],function(signal,hs){
 	state: {type: Types.prim},
 	reported_by: {type: Types.prim},
 	payments: {type: Types.prim},
-	expiry_epoch: {type: Types.prim}
+	expiry_epoch: {type: Types.prim},
+	total_bounty: {type: Types.prim}
     });
 
     var DutyS = Signal({
